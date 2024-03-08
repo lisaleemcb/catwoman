@@ -1,0 +1,35 @@
+debug 	F
+restart 	F
+restart_N 	11
+t_final 	94.5
+box_size 	296735,90504451
+sortie #fix me 	3
+diagnosis_n 	1
+collisions #fix me 	1
+boundary_condition 	periodic
+dtime 	0.7
+theta 	0.7
+eps 	70
+use_quad 	T
+use_cosmo 	T
+use_cooling 	T
+use_sticky 	F
+UO 	0.01
+ncrit 	15
+just_radiative 	F
+use_quasar 	T
+only_dynamic 	F
+UV_RT_dynamic_use 	T
+use_Helium 	F
+LyA_from_Xray 	F
+save_lightcones 	T
+elasticity_params 	0.999996
+ion_escapefrac 	0.003
+Xray_Lfunc 	0.00192
+overdensity_thresh 	100.
+gasconversion_timescale 	8191.9
+feedback_efficieny 	0.
+hard_Xray_fraction 	0.4
+log10_Mmin 	8.0
+ion_escapefrac_thresh 	0.03
+ion_escapefrac_post 	0.275

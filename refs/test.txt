@@ -1,0 +1,10 @@
+# this file contains the mappings from the native LoReLi output parameters data file (right column), and the more pandas friendly format (left column)
+
+debug 	 	 	  /debug mode
+restart 	 	 	  /restart ?
+restart_N	 	 	  /restart from file number
+t_final 	 	 	  /final time in 10^7 years/
+box_size 	  /Box size in kpc/
+3 	 	 	  /sortie tout les n pas de temps/
+diagnosis_n 	 	 	   /Diagnosis every n timesteps
+1 	 	 	  /collisions tout le n pas de temps/

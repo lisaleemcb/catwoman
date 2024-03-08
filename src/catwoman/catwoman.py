@@ -40,7 +40,7 @@ _logger = logging.getLogger(__name__)
 # when using this Python module as a library.
 
 
-def fib(n):
+def read_cube(path, type=np.float64):
     """Fibonacci example function
 
     Args:
@@ -49,11 +49,63 @@ def fib(n):
     Returns:
       int: n-th Fibonacci number
     """
-    assert n > 0
-    a, b = 1, 1
-    for _i in range(n - 1):
-        a, b = b, a + b
-    return a
+    try :
+        cube = np.fromfile(path, dtype=type)
+    except FileNotFoundError :
+        print(" !!!!!! file not found : "+ path)
+        cube = np.zeros(256**3)
+        print("moving on...")
+    shape = np.shape(cube)[0]
+    length = int(shape**(1/3)) +1
+
+    cube =np.reshape(cube, (length,length,length)).T
+    shape = np.shape(cube)
+
+    return cube
+
+def fetch_spectra(file_n, sim_n=10038):
+    """Fibonacci example function
+
+    Args:
+      n (int): integer
+
+    Returns:
+      int: n-th Fibonacci number
+    """
+    print(f'Now parsing /Users/emcbride/kSZ/data/Pee_spectra_LoReLi/raw/simu{sim_n}/')
+    z_fn = f'/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/raw/simu{sim_n}/redshift_list.dat'
+    redshifts = {}
+
+    with open(z_fn) as f:
+        for line in f:
+           (val, key) = line.split()
+           redshifts[key] = val
+
+    #print(redshifts)
+
+    Pee_list = []
+    for n in file_n:
+        print(f'Now on file {n}')
+
+        ion_file = f'/Users/emcbride/kSZ/data/xion/xion_256_out{n}.dat'
+        ion_cube = read_cube(ion_file)
+
+        dens_file = f'/Users/emcbride/kSZ/data/dens/dens_256_out{n}.dat'
+        dens_cube = read_cube(dens_file)
+
+        Pee_file = f'/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatted/simu{sim_n}/postprocessing/cubes/ps_dtb/powerspectrum_electrons{n}.dat'
+        P_ee = np.loadtxt(Pee_file).T
+        z = redshifts[n]
+
+        spectra_dict = {'file_n': n,
+                        'z': float(z),
+                        'dens_cube': dens_cube,
+                        'ion_cube': ion_cube,
+                        'k': P_ee[0],
+                        'P_k': P_ee[1]}
+        Pee_list.append(spectra_dict)
+
+    return Pee_list
 
 
 # ---- CLI ----

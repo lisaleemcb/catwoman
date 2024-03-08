@@ -1,0 +1,39 @@
+# this file contains the mappings from the native LoReLi output parameters data file (right column), and the more pandas friendly format (left column)
+
+debug 	 	 	  /debug mode
+restart 	 	 	  /restart ?
+restart_N	 	 	  /restart from file number
+t_final 	 	 	  /final time in 10^7 years/
+box_size 	  /Box size in kpc/
+sortie  #fix me	 	 	  /sortie tout les n pas de temps/
+diagnosis_n 	 	 	   /Diagnosis every n timesteps
+collisions  #fix me	 	 	  /collisions tout le n pas de temps/
+boundary_condition 	 	 	  /Type of boundary conditions/
+dtime  	 	 	  /dtime/
+Oct_cell_strat  	 	 	  Oct_cell opening strategy: angle or error
+theta 	 	 	   /theta/
+tolerance_grav  	 	 	  Error tolerance parameter of computing gravitional forces
+eps 	 	 	  /eps/
+use_quad 	 	 	  /use quadrupoles/
+use_cosmo   	 	 	  /use cosmo/
+use_cooling 	 	 	  /use cooling/
+use_sticky 	 	 	  /use sticky/
+UO 	 	 	  /UO/
+ncrit 	 	 	  /ncrit/
+just_radiative   	 	 	  /only Radiative transfer
+use_quasar 	 	 	  /using quasar
+only_dynamic  	 	 	  /only dynamic
+UV_RT_dynamic_use  	 	 	  /UV_RT_dynamic_use
+use_Helium  	 	 	  /Helium use
+LyA_from_Xray  	 	 	  /lyman alpha from X-ray
+save_lightcones  	 	 	  /save lightcones
+elasticity_params  	 	 	  /elasticity parameters(1.,1. = elastic)/
+ion_escapefrac  	 	 	  /ionizing escape fraction/
+Xray_Lfunc  	 	 	  /X_ray luminosity fraction. 0.00192 eq f_x=1 for fiducial IMF/
+overdensity_thresh   	 	 	  /overdensity threshold for star formation/
+gasconversion_timescale	 	 	  /gas convension time scale for star formation in 10 Myr/
+feedback_efficieny 	 	 	  /feedback efficiency parameter
+hard_Xray_fraction 	 	 	  /hard_Xray_fraction
+log10_Mmin	 	  /log10 of Mmin of CMFs
+ion_escapefrac_thresh  	 	 	  /ionizing escape fraction_threshold/
+ion_escapefrac_post  	 	 	  /ionizing escape fraction post/

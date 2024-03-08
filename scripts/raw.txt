@@ -1,0 +1,37 @@
+F 	 	 	  /debug mode 
+F 	 	 	  /restart ? 
+11	 	 	  /restart from file number 
+94.5 	 	 	  /final time in 10^7 years/ 
+296735,90504451 	  /Box size in kpc/ 
+3 	 	 	  /sortie tout les n pas de temps/ 
+1 	 	 	   /Diagnosis every n timesteps
+1 	 	 	  /collisions tout le n pas de temps/ 
+periodic 	 	 	  /Type of boundary conditions/ 
+0.7  	 	 	  /dtime/ 
+angle  	 	 	  Oct_cell opening strategy: angle or error 
+0.7 	 	 	   /theta/ 
+0.01  	 	 	  Error tolerance parameter of computing gravitional forces 
+70 	 	 	  /eps/
+T 	 	 	  /use quadrupoles/ 
+T   	 	 	  /use cosmo/ 
+T 	 	 	  /use cooling/ 
+F 	 	 	  /use sticky/ 
+0.01 	 	 	  /UO/ 
+15 	 	 	  /ncrit/ 
+F   	 	 	  /only Radiative transfer 
+T 	 	 	  /using quasar 
+F  	 	 	  /only dynamic 
+T  	 	 	  /UV_RT_dynamic_use 
+F  	 	 	  /Helium use
+F  	 	 	  /lyman alpha from X-ray 
+T  	 	 	  /save lightcones 
+0.999996 1.  	 	 	  /elasticity parameters(1.,1. = elastic)/ 
+0.003  	 	 	  /ionizing escape fraction/ 
+0.00192  	 	 	  /X_ray luminosity fraction. 0.00192 eq f_x=1 for fiducial IMF/ 
+100.   	 	 	  /overdensity threshold for star formation/
+8191.9	 	 	  /gas convension time scale for star formation in 10 Myr/ 
+0. 	 	 	  /feedback efficiency parameter 
+0.4 	 	 	  /hard_Xray_fraction
+8.0	 	  /log10 of Mmin of CMFs 
+0.03  	 	 	  /ionizing escape fraction_threshold/ 
+0.275  	 	 	  /ionizing escape fraction post/ 
