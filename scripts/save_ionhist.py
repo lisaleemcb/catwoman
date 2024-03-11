@@ -17,6 +17,7 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().split('\n'
     sim = cat.Cat(sn,
                     verbose=False,
                     load_ion=True,
+                    load_spectra=True,
                     path_sim='/loreli/rmeriot',
                     path_params = 'Pee_spectra_LoReLi/formatted',
                     path_Pee = 'ps_ee',
