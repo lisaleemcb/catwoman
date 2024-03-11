@@ -13,7 +13,7 @@ import catwoman.cat as cat
 #     sims_num.append(num)
 
 ion_histories = {}
-for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().split('\n'):
+for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
     sim = cat.Cat(sn,
                     verbose=False,
                     load_ion=True,

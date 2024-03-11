@@ -95,8 +95,8 @@ class Cat:
 
         Pee_list = []
         for n in self.file_nums:
-            if self.verbose:
-                print(f'Now on file {n}')
+            # if self.verbose:
+            #     print(f'Now on file {n}')
 
             Pee_file = f'{self.path_sim}/{self.path_Pee}/simu{self.sim_n}/postprocessing/cubes/ps_dtb/powerspectrum_electrons{n}.dat'
             P_ee = (0,0)
@@ -121,8 +121,8 @@ class Cat:
 
         ion_list = []
         for n in self.file_nums:
-            if self.verbose:
-                print(f'Now on file {n}')
+            # if self.verbose:
+            #     print(f'Now on file {n}')
 
             ion_file = f'{self.path_ion}/simu{n}/xion/xion_256_out{n}.dat'
             ion_cube = 0
@@ -150,8 +150,8 @@ class Cat:
 
         dens_list = []
         for n in self.file_nums:
-            if self.verbose:
-               print(f'Now on file {n}')
+            # if self.verbose:
+            #    print(f'Now on file {n}')
 
             dens_file = f'{self.path_sim}/xion/xion_256_out{n}.dat'
             dens_cube = 0
