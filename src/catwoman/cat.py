@@ -124,7 +124,7 @@ class Cat:
             # if self.verbose:
             #     print(f'Now on file {n}')
 
-            ion_file = f'{self.path_ion}/simu{n}/xion/xion_256_out{n}.dat'
+            ion_file = f'{self.path_ion}/simu{self.sim_n}/xion/xion_256_out{n}.dat'
             ion_cube = 0
 
             if self.verbose:
