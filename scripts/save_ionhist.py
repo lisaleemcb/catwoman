@@ -12,7 +12,14 @@ for filename in os.listdir('/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatte
 
 ion_histories = {}
 for sn in sims_num:
-    sim = cat.Cat(sn, verbose=False, load_ion=True)
+    sim = cat.Cat(sn,
+                    verbose=False,
+                    load_ion=True,
+                    path_sim='/loreli/rmeriot',
+                    path_params = 'Pee_spectra_LoReLi/formatted',
+                    path_Pee = 'ps_ee',
+                    path_ion = '/obs/emcbride/xion',
+                    path_dens = 'dens')
     z = []
     XII = []
     for i, n in enumerate(sim.file_nums):

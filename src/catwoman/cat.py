@@ -9,13 +9,14 @@ class Cat:
     def __init__(self,
                 sim_n,
                 verbose=False,
+                load_spectra=False,
                 load_params=False,
                 load_ion=False,
                 load_dens=False,
                 path_sim='/Users/emcbride/kSZ/data',
-                path_params = f'Pee_spectra_LoReLi/formatted',
+                path_params = 'Pee_spectra_LoReLi/formatted',
                 path_Pee = 'Pee_spectra_LoReLi/raw',
-                path_ion = 'xion',
+                path_ion = '/Users/emcbride/kSZ/data',
                 path_dens = 'dens',
                 ):
 
@@ -28,7 +29,11 @@ class Cat:
 
         self.file_nums = self.gen_filenums()
         self.redshifts = self.fetch_redshifts()
-        self.spectra = self.fetch_spectra()
+
+        if load_spectra:
+            if verbose:
+                print("fetching P_ee since you asked so nicely...")
+            self.spectra = self.fetch_spectra()
 
         if load_params:
             if verbose:
@@ -119,7 +124,7 @@ class Cat:
             if self.verbose:
                 print(f'Now on file {n}')
 
-            ion_file = f'{self.path_sim}/xion/xion_256_out{n}.dat'
+            ion_file = f'{self.path_ion}/simu{n}/xion/xion_256_out{n}.dat'
             ion_cube = 0
 
             if self.verbose:
