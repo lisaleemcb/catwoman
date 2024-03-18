@@ -1,7 +1,9 @@
 import os
 import pandas as pd
 
-import cat
+import catwoman.cat as cat
+
+db_fn = 'Loreli_data.db'
 
 sims_num = []
 for filename in os.listdir('/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatted/'):
@@ -12,10 +14,15 @@ for filename in os.listdir('/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatte
 
 sims = [[] for n in sims_num]
 for i, n in enumerate(sims_num):
-    sim = cat.Cat(n, verbose=False)
-    # df = pd.DataFrame.from_dict(sim.params, orient='index').T
-    # df.info(verbose=False, memory_usage="deep")
+    sim = cat.Cat(n, verbose=False, load_params=True, load_spectra=True)
+   # sim.params['spectra'] = sim.spectra
     sims[i] = sim.params
+
+
+df = pd.DataFrame(sims)
+df.to_csv(db_fn)
 
 print('example sim is')
 print(sims[5])
+
+print(f'data saved to {db_fn}')
