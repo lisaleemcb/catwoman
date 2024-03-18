@@ -3,6 +3,9 @@ import os
 import numpy as np
 import pandas as pd
 
+import powerbox as pb
+from powerbox import get_power
+
 import catwoman.utils as utils
 
 class Cat:
@@ -15,9 +18,9 @@ class Cat:
                 load_dens=False,
                 path_sim='/Users/emcbride/kSZ/data',
                 path_params = 'Pee_spectra_LoReLi/formatted',
-                path_Pee = 'Pee_spectra_LoReLi/raw',
-                path_ion = '/Users/emcbride/kSZ/data',
-                path_dens = 'dens',
+                path_Pee = 'LoReLi/ps_ee',
+                path_ion = '/Users/emcbride/kSZ/data/LoReLi',
+                path_density = '/Users/emcbride/kSZ/data/LoReLi/dens',
                 ):
 
         print(f'Loading sim number {sim_n}...')
@@ -44,12 +47,12 @@ class Cat:
             if verbose:
                 print("fetching ion cubes since you asked so nicely...")
             self.path_ion = path_ion
-            self.ion_cube = self.fetch_ion()
+            self.ion = self.fetch_ion()
         if load_dens:
             if verbose:
                 print("fetching density cubes since you asked so nicely...")
-            self.path_dens = path_dens
-            self.dens_cube = self.fetch_dens()
+            self.path_density = path_density
+            self.density = self.fetch_dens()
 
         print("Loaded and ready for science!!")
 
@@ -100,6 +103,8 @@ class Cat:
 
             Pee_file = f'{self.path_sim}/{self.path_Pee}/simu{self.sim_n}/postprocessing/cubes/ps_dtb/powerspectrum_electrons{n}.dat'
             P_ee = (0,0)
+            if not os.path.isfile(Pee_file):
+                raise FileNotFoundError(filename)
             if os.path.isfile(Pee_file):
                 P_ee = np.loadtxt(Pee_file).T
 
@@ -113,6 +118,9 @@ class Cat:
                                 'P_k': P_ee[1]}
                 Pee_list.append(spectra_dict)
 
+
+
+
         return Pee_list
 
     def fetch_ion(self, nbins=512):
@@ -124,13 +132,15 @@ class Cat:
             # if self.verbose:
             #     print(f'Now on file {n}')
 
-            ion_file = f'{self.path_ion}/simu{self.sim_n}/xion/xion_256_out{n}.dat'
-            ion_cube = 0
+            ion_file = f'{self.path_ion}/xion/xion_256_out{n}.dat'
 
             if self.verbose:
                 print(f'Now reading in ion box from from {ion_file}')
+
+            if not os.path.isfile(ion_file):
+                raise FileNotFoundError(ion_file)
             if os.path.isfile(ion_file):
-                ion_cube = utils.read_cube(ion_file)
+                ion = utils.read_cube(ion_file)
 
             z = 0
             if n in self.redshifts.keys():
@@ -138,7 +148,7 @@ class Cat:
 
             ion_dict = {'file_n': n,
                         'z': float(z),
-                        'ion_cube': ion_cube}
+                        'cube': ion}
 
             ion_list.append(ion_dict)
 
@@ -153,27 +163,75 @@ class Cat:
             # if self.verbose:
             #    print(f'Now on file {n}')
 
-            dens_file = f'{self.path_sim}/xion/xion_256_out{n}.dat'
-            dens_cube = 0
+            dens_file = f'{self.path_density}/dens_256_out{n}.dat'
 
             if self.verbose:
-                print(f'Now reading in ion box from from {dens_file}')
+                print(f'Now reading in density box from from {dens_file}')
+
+            if not os.path.isfile(dens_file):
+                raise FileNotFoundError(dens_file)
             if os.path.isfile(dens_file):
                 dens_cube = utils.read_cube(dens_file)
                 z = 0
                 if n in self.redshifts.keys():
                     z = self.redshifts[n]
-                    dens_cube = utils.convert_density(dens_cube, z)
+                    cube = utils.convert_density(dens_cube, z)
 
                 dens_dict = {'file_n': n,
                             'z': float(z),
-                            'dens_cube': dens_cube}
+                            'cube': cube}
                 dens_list.append(dens_dict)
 
         return dens_list
 
     def calc_ion_history(self):
-        ion_file = f'{self.path_sim}/xion/xion_256_out{n}.dat'
-        ion_cube = read_cube(ion_file)
+        z = []
+        xe = []
+        for slice in self.ion:
+            # if self.verbose:
+            #    print(f'Now on file {n}')
+            if self.verbose:
+                print(f'Calculating ionisation fraction at redshift {slice['z']}')
 
-        return 0
+            cube = slice['cube']
+            z.append(slice['z'])
+            xe.append(np.mean(cube))
+
+        return z, xe
+
+    def calc_Pee(self, k=None):
+        Pee_list = []
+        for i, den in enumerate(self.density):
+            if self.verbose:
+                print(f'Calculating electron power spectrum at redshift {den['z']}')
+
+            file_n = den['file_n']
+            z = den['z']
+            den_cube = den['cube']
+            ion_cube = 0 # this is to increase the scope of the variable
+            if self.ion[i]['file_n'] == file_n:
+                ion = self.ion[i]
+                ion_cube = ion['cube']
+
+            if self.ion[i]['file_n'] != file_n:
+                raise Exception("The file numbers don't match")
+
+            delta = (den_cube - np.mean(den_cube)) / np.mean(den_cube)
+            ne = ion_cube * (1 + delta)
+            ne_overdensity = (ne - np.mean(ne)) / np.mean(ne)
+
+            pk_ne = 0
+            bins_ne = 0
+            if k is not None:
+                if self.verbose:
+                    print('Using the k values you asked for')
+                pk_ne, bins_ne = get_power(ne_overdensity, 296.0, bins=k)
+            if k is None:
+                pk_ne, bins_ne = get_power(ne_overdensity, 296.0)
+            spectra_dict = {'file_n': file_n,
+                            'z': z,
+                            'k': bins_ne,
+                            'P_k': pk_ne}
+            Pee_list.append(spectra_dict)
+
+        return Pee_list
