@@ -15,7 +15,7 @@ import catwoman.cat as cat
 ion_histories = {}
 for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
     sim = cat.Cat(sn,
-                    verbose=False,
+                    verbose=True,
                     load_ion=True,
                     load_spectra=True,
                     path_sim='/loreli/rmeriot',
