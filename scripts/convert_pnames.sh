@@ -38,7 +38,7 @@ N_ref=$(sed -n '$=' "$ref")
 start_file=$(($N_file - $nrows_file))
 start_ref=$(($N_ref - $nrows_ref))
 
-echo "hi!"
+echo "hi, testing!"
 
 for ((i = 0 ; i < (("$nrows_file"+1)) ; i++))
 do
@@ -47,16 +47,12 @@ do
     # echo "$pname_new"
     if [[ $pname_new == 'box_size' ]]
         then
-           # echo "$pname_new"
-           # sed -Er "$(($i+$start_file)) s/\/.*/$pname_new/gp" -e "$i s/\s+/ /g; s/:/=/;" -e "$i s/(.*) (.*) (\/.*)/(\1, \2) \3/p;" $file
-           sed -nEre "s/\s+/ /g; s/:/=/;" -e "s/(.*) (.*) (\/.*)/(\1, \2)\t"$pname_new"/p;" $file
+           sed -nEre "s/,/./g;s/\s+/ /g;" -e ""$(($i+$start_file))" s/\/.*/\t"$pname_new"/gp;" $file
     elif [[ $pname_new == 'elasticity_params' ]]
         then
-        #  echo "$pname_new"
-           # sed -Er "$(($i+$start_file)) s/\/.*/$pname_new/gp" -e "$i s/\s+/ /g; s/:/=/;" -e "$i s/(.*) (.*) (\/.*)/(\1, \2) \3/p;" $file
-           sed -nEre "s/\s+/ /g; s/:/=/;" -e "s/(.*) (.*) (\/.*)/(\1, \2)\t"$pname_new"/p;" $file
+           sed -nEre "s/\s+/ /g;" -e "s/(.*) (.*) (\/.*)/(\1, \2)\t"$pname_new"/p;" $file
     else
-        sed sed -nEre "s/\s+/ /g; s/:/=/;" -e ""$(($i+$start_file))" s/\/.*/\t"$pname_new"/gp;" $file
+        sed -nEre "s/\s+/ /g;" -e ""$(($i+$start_file))" s/\/.*/\t"$pname_new"/gp;" $file
     fi
 done > "$new_file"
 
