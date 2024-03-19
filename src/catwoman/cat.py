@@ -12,15 +12,15 @@ class Cat:
     def __init__(self,
                 sim_n,
                 verbose=False,
-                load_spectra=False,
+                load_Pee=False,
                 load_params=False,
                 load_ion=False,
-                load_dens=False,
-                path_sim='/Users/emcbride/kSZ/data',
-                path_params = 'Pee_spectra_LoReLi/formatted',
+                load_density=False,
+                path_sim=None,
+                path_params = 'Pee_Pee_LoReLi/formatted',
                 path_Pee = 'LoReLi/ps_ee',
                 path_ion = '/Users/emcbride/kSZ/data/LoReLi',
-                path_density = '/Users/emcbride/kSZ/data/LoReLi/dens',
+                path_density = '/Users/emcbride/kSZ/data/LoReLi',
                 ):
 
         print(f'Loading sim number {sim_n}...')
@@ -30,35 +30,69 @@ class Cat:
         self.path_Pee = path_Pee
         self.verbose = verbose
 
+        if load_params:
+            if self.path_sim is not None:
+                self.path_params = f'{self.path_sim}/{path_params}'
+            else:
+                self.path_params = path_params
+
+        if load_Pee:
+            if self.path_sim is not None:
+                self.path_Pee = f'{self.path_sim}/{path_Pee}'
+            else:
+                self.path_params = path_params
+
+        if load_ion:
+            if self.path_sim is not None:
+                self.path_ion = f'{self.path_sim}/{path_ion}'
+            else:
+                self.path_ion = path_ion
+
+        if load_density:
+            if self.path_sim is not None:
+                self.path_density = f'{self.path_sim}/{path_density}'
+            else:
+                self.path_density = path_density
+
+        if verbose:
+            print('You have told me that data lives in the following places:')
+            if load_params:
+                print(f'params: {self.path_params}')
+            if load_Pee:
+                print(f'electron power Pee: {self.path_Pee}')
+            if load_ion:
+                print(f'ionisation cubes: {self.path_ion}')
+            if load_density:
+                print(f'density cubes: {self.path_density}')
+
         self.file_nums = self.gen_filenums()
         self.redshifts = self.fetch_redshifts()
-
-        if load_spectra:
-            if verbose:
-                print("fetching P_ee since you asked so nicely...")
-            self.spectra = self.fetch_spectra()
 
         if load_params:
             if verbose:
                 print("fetching params since you asked so nicely...")
-            self.path_params = path_params
             self.params = self.fetch_params()
+
+        if load_Pee:
+            if verbose:
+                print("fetching P_ee since you asked so nicely...")
+            self.Pee = self.fetch_Pee()
+
         if load_ion:
             if verbose:
                 print("fetching ion cubes since you asked so nicely...")
-            self.path_ion = path_ion
             self.ion = self.fetch_ion()
-        if load_dens:
+
+        if load_density:
             if verbose:
                 print("fetching density cubes since you asked so nicely...")
-            self.path_density = path_density
             self.density = self.fetch_dens()
 
         print("Loaded and ready for science!!")
 
     def gen_filenums(self):
         file_nums = []
-        for filename in os.listdir(f'{self.path_sim}/{self.path_Pee}/simu{self.sim_n}/postprocessing/cubes/ps_dtb'):
+        for filename in os.listdir(f'{self.path_Pee}/simu{self.sim_n}/postprocessing/cubes/ps_dtb'):
             basename, extension = os.path.splitext(filename)
             file_nums.append(basename.split('electrons')[1])
 
@@ -70,9 +104,9 @@ class Cat:
         fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
 
         if self.verbose:
-            print(f'Now reading in params from {self.path_sim}/{self.path_params}/simu{self.sim_n}/{fn_params}')
+            print(f'Now reading in params from {self.path_params}/simu{self.sim_n}/{fn_params}')
 
-        df = pd.read_csv(f'{self.path_sim}/{self.path_params}/simu{self.sim_n}/{fn_params}', sep='\t', header=None)
+        df = pd.read_csv(f'{self.path_params}/simu{self.sim_n}/{fn_params}', sep='\t', header=None)
         params = dict(zip(list(df[1]), list(df[0])))
         params['sim_n'] = self.sim_n
 
@@ -81,7 +115,7 @@ class Cat:
     def fetch_redshifts(self):
         if self.verbose:
             print('Fetching redshifts...')
-        fn_z = f'{self.path_sim}/{self.path_Pee}/simu{self.sim_n}/redshift_list.dat'
+        fn_z = f'{self.path_Pee}/simu{self.sim_n}/redshift_list.dat'
 
         redshifts = {}
         with open(fn_z) as f:
@@ -91,17 +125,17 @@ class Cat:
 
         return redshifts
 
-    def fetch_spectra(self, nbins=512):
+    def fetch_Pee(self, nbins=512):
         if self.verbose:
-            print('Fetching Pee spectra...')
-            print(f'Reading in files from {self.path_sim}/{self.path_Pee}/simu{self.sim_n}')
+            print('Fetching Pee Pee...')
+            print(f'Reading in files from {self.path_Pee}/simu{self.sim_n}')
 
         Pee_list = []
         for n in self.file_nums:
             # if self.verbose:
             #     print(f'Now on file {n}')
 
-            Pee_file = f'{self.path_sim}/{self.path_Pee}/simu{self.sim_n}/postprocessing/cubes/ps_dtb/powerspectrum_electrons{n}.dat'
+            Pee_file = f'{self.path_Pee}/simu{self.sim_n}/postprocessing/cubes/ps_dtb/powerspectrum_electrons{n}.dat'
             P_ee = (0,0)
             if not os.path.isfile(Pee_file):
                 raise FileNotFoundError(filename)
@@ -112,14 +146,11 @@ class Cat:
                 if n in self.redshifts.keys():
                     z = self.redshifts[n]
 
-                spectra_dict = {'file_n': n,
+                Pee_dict = {'file_n': n,
                                 'z': float(z),
                                 'k': P_ee[0],
                                 'P_k': P_ee[1]}
-                Pee_list.append(spectra_dict)
-
-
-
+                Pee_list.append(Pee_dict)
 
         return Pee_list
 
@@ -134,8 +165,8 @@ class Cat:
 
             ion_file = f'{self.path_ion}/xion/xion_256_out{n}.dat'
 
-            if self.verbose:
-                print(f'Now reading in ion box from from {ion_file}')
+            # if self.verbose:
+            #     print(f'Now reading in ion box from from {ion_file}')
 
             if not os.path.isfile(ion_file):
                 raise FileNotFoundError(ion_file)
@@ -163,10 +194,10 @@ class Cat:
             # if self.verbose:
             #    print(f'Now on file {n}')
 
-            dens_file = f'{self.path_density}/dens_256_out{n}.dat'
+            dens_file = f'{self.path_density}/dens/dens_256_out{n}.dat'
 
-            if self.verbose:
-                print(f'Now reading in density box from from {dens_file}')
+            # if self.verbose:
+            #     print(f'Now reading in density box from from {dens_file}')
 
             if not os.path.isfile(dens_file):
                 raise FileNotFoundError(dens_file)
@@ -228,10 +259,10 @@ class Cat:
                 pk_ne, bins_ne = get_power(ne_overdensity, 296.0, bins=k)
             if k is None:
                 pk_ne, bins_ne = get_power(ne_overdensity, 296.0)
-            spectra_dict = {'file_n': file_n,
+            Pee_dict = {'file_n': file_n,
                             'z': z,
                             'k': bins_ne,
                             'P_k': pk_ne}
-            Pee_list.append(spectra_dict)
+            Pee_list.append(Pee_dict)
 
         return Pee_list
