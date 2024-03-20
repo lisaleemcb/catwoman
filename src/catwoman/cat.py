@@ -222,7 +222,7 @@ class Cat:
             # if self.verbose:
             #    print(f'Now on file {n}')
             if self.verbose:
-                print(f'Calculating ionisation fraction at redshift {slice['z']}')
+                print(f"Calculating ionisation fraction at redshift {slice['z']}")
 
             cube = slice['cube']
             z.append(slice['z'])
@@ -234,7 +234,7 @@ class Cat:
         Pee_list = []
         for i, den in enumerate(self.density):
             if self.verbose:
-                print(f'Calculating electron power spectrum at redshift {den['z']}')
+                print(f"Calculating electron power spectrum at redshift {den['z']}")
 
             file_n = den['file_n']
             z = den['z']
