@@ -32,25 +32,25 @@ class Cat:
 
         if load_params:
             if self.path_sim is not None:
-                self.path_params = f'{self.path_sim}/{path_params}'
+                self.path_params = f'{self.path_sim}/simu{self.sim_n}/'
             else:
                 self.path_params = path_params
 
         if load_Pee:
             if self.path_sim is not None:
-                self.path_Pee = f'{self.path_sim}/{path_Pee}'
+                self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/{path_Pee}'
             else:
                 self.path_params = path_params
 
         if load_ion:
             if self.path_sim is not None:
-                self.path_ion = f'{self.path_sim}/{path_ion}'
+                self.path_ion = f'{self.path_sim}/simu{self.sim_n}/{path_ion}'
             else:
                 self.path_ion = path_ion
 
         if load_density:
             if self.path_sim is not None:
-                self.path_density = f'{self.path_sim}/{path_density}'
+                self.path_density = f'{self.path_sim}/simu{self.sim_n}/{path_density}'
             else:
                 self.path_density = path_density
 
