@@ -19,7 +19,7 @@ ion_histories = {}
 
 path = '/obs/emcbride/sims'
 
-baddies = ['17681']
+baddies = ['17681', '13492']
 sims_num = []
 sims_none = []
 for filename in os.listdir(path):
