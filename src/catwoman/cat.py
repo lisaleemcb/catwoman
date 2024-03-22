@@ -94,6 +94,8 @@ class Cat:
         file_nums = []
         for filename in os.listdir(f'{self.path_ion}'):
             basename, extension = os.path.splitext(filename)
+            print(basename, extension)
+            print(basename.split('out')[1])
             file_nums.append(basename.split('out')[1])
 
         return np.sort(file_nums)
