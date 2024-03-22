@@ -31,6 +31,8 @@ for filename in os.listdir(path):
 for i, sn in enumerate(sims_num):
     if sn in baddies:
         print(f'Skipped the baddie {sn}')
+
+    else:
         print('===================================')
         print(f'Loading sim {sn}')
         print('===================================')
