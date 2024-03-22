@@ -33,7 +33,9 @@ for i, sn in enumerate(sims_num):
                     load_ion=True,
                     load_density=True,
                     path_sim=path)
-    print(sim)
+    print(sim.file_nums)
+    print(sim.redshifts)
+    print(sim.density)
     print('===================================')
     print(f'sim {sn} loaded, writing ion history...')
     print('===================================')
