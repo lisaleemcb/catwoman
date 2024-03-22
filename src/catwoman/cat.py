@@ -165,13 +165,14 @@ class Cat:
 
             ion_file = f'{self.path_ion}/xion_256_out{n}.dat'
 
-            # if self.verbose:
-            #     print(f'Now reading in ion box from from {ion_file}')
+            if self.verbose:
+                print(f'Now reading in ion box from from {ion_file}')
 
             if not os.path.isfile(ion_file):
                 raise FileNotFoundError(ion_file)
             if os.path.isfile(ion_file):
                 ion = utils.read_cube(ion_file)
+                print(f'ION BOX IS {ion}')
 
             z = 0
             if n in self.redshifts.keys():
