@@ -15,8 +15,8 @@
 file=$1
 ref=$2
 
-source /Users/emcbride/.bash_profile
-mamba activate kSZ
+#source /Users/emcbride/.bash_profile
+#mamba activate kSZ
 
 #echo which mamba
 
