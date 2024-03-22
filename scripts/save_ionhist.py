@@ -36,16 +36,18 @@ for i, sn in enumerate(sims_num):
                     load_ion=True,
                     load_density=True,
                     path_sim=path)
-    print(sim.file_nums)
-    print(sim.redshifts)
-    print(f'ion cubes look like: {sim.ion}')
+    print(f'files: {sim.file_nums}')
+    print(f'with redshifts: {sim.redshifts}')
+
     z = []
     xe = []
-    for j, fn in enumerate(sim.file_nums):
-        print('Now calculating the ion history...')
-        if sim.ion[i]['file_n'] == fn:
-            z.append(sim.ion[j]['z'])
-            xe.append(np.mean(sim.ion[j]['cube']))
+
+    if not sim.file:
+        for j, fn in enumerate(sim.file_nums):
+            print('Now calculating the ion history...')
+            if sim.ion[i]['file_n'] == fn:
+                z.append(sim.ion[j]['z'])
+                xe.append(np.mean(sim.ion[j]['cube']))
 
     history = {'z': z,
             'xe': xe}
