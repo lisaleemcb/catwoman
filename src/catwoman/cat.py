@@ -95,11 +95,8 @@ class Cat:
 
     def gen_filenums(self):
         file_nums = []
-        print('here!')
-        print({self.path_ion})
         for filename in os.listdir(f'{self.path_ion}'):
             basename, extension = os.path.splitext(filename)
-            print(basename.split('out')[1])
 
             file_nums.append(basename.split('out')[1])
 

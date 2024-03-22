@@ -42,12 +42,12 @@ for i, sn in enumerate(sims_num):
     z = []
     xe = []
 
-    if not sim.file_nums:
+    if len(sim.file_nums) == 0:
         print('No ion files in this sim :(')
-    if sim.file_nums:
+    if len(sim.file_nums) > 0:
         for j, fn in enumerate(sim.file_nums):
             print('Now calculating the ion history...')
-            if sim.ion[i]['file_n'] == fn:
+            if sim.ion[j]['file_n'] == fn:
                 z.append(sim.ion[j]['z'])
                 xe.append(np.mean(sim.ion[j]['cube']))
 
