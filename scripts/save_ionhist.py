@@ -42,7 +42,9 @@ for i, sn in enumerate(sims_num):
     z = []
     xe = []
 
-    if not sim.file:
+    if not sim.file_nums:
+        print('No ion files in this sim :(')
+    if sim.file_nums:
         for j, fn in enumerate(sim.file_nums):
             print('Now calculating the ion history...')
             if sim.ion[i]['file_n'] == fn:
