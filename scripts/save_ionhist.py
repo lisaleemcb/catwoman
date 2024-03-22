@@ -26,6 +26,9 @@ for filename in os.listdir(path):
     sims_num.append(num)
 
 for i, sn in enumerate(sims_num):
+    print('===================================')
+    print(f'Loading sim {sn}')
+    print('===================================')
     sim = cat.Cat(sn,
                     verbose=True,
                     load_params=False,
@@ -36,16 +39,14 @@ for i, sn in enumerate(sims_num):
     print(sim.file_nums)
     print(sim.redshifts)
     print(sim.density)
-    print('===================================')
-    print(f'sim {sn} loaded, writing ion history...')
-    print('===================================')
     print(f'ion cubes look like: {sim.ion}')
     z = []
     xe = []
     for j, fn in enumerate(sim.file_nums):
-       if sim.ion[i]['file_n'] == fn:
-           z.append(sim.ion[j]['z'])
-           xe.append(np.mean(sim.ion[j]['cube']))
+        print('Now calculating the ion history...')
+        if sim.ion[i]['file_n'] == fn:
+            z.append(sim.ion[j]['z'])
+            xe.append(np.mean(sim.ion[j]['cube']))
 
     history = {'z': z,
             'xe': xe}
