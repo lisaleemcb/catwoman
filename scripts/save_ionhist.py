@@ -34,7 +34,10 @@ for i, sn in enumerate(sims_num):
                     load_ion=True,
                     load_density=True,
                     path_sim=path)
+    print('===================================')
     print(f'sim {sn} loaded, writing ion history...')
+    print('===================================')
+    print(f'ion cubes look like: {sim.ion}')
     z = []
     xe = []
     for j, fn in enumerate(sim.file_nums):
@@ -45,5 +48,7 @@ for i, sn in enumerate(sims_num):
     history = {'z': z,
             'xe': xe}
     ion_histories[sn] = history
+
+    print('===================================')
 
 np.savez('ion_histories', ion_histories)
