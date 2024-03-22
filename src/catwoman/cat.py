@@ -94,8 +94,7 @@ class Cat:
         file_nums = []
         for filename in os.listdir(f'{self.path_ion}'):
             basename, extension = os.path.splitext(filename)
-            print(basename, extension)
-            print(basename.split('out')[1])
+
             file_nums.append(basename.split('out')[1])
 
         return np.sort(file_nums)
@@ -167,8 +166,8 @@ class Cat:
 
             ion_file = f'{self.path_ion}/xion_256_out{n}.dat'
 
-            if self.verbose:
-                print(f'Now reading in ion box from from {ion_file}')
+            # if self.verbose:
+            #     print(f'Now reading in ion box from from {ion_file}')
 
             if not os.path.isfile(ion_file):
                 raise FileNotFoundError(ion_file)
