@@ -4,9 +4,10 @@ import pandas as pd
 import catwoman.cat as cat
 
 db_fn = 'Loreli_data.db'
+path = '/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatted/'
 
 sims_num = []
-for filename in os.listdir('/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatted/'):
+for filename in os.listdir(path):
     basename, extension = os.path.splitext(filename)
     sim, num = basename.split('u')
 
