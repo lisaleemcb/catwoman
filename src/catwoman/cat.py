@@ -173,7 +173,6 @@ class Cat:
                 raise FileNotFoundError(ion_file)
             if os.path.isfile(ion_file):
                 ion = utils.read_cube(ion_file)
-                print(f'ION BOX IS {ion}')
 
             z = 0
             if n in self.redshifts.keys():
