@@ -65,6 +65,9 @@ class Cat:
             if load_density:
                 print(f'density cubes: {self.path_density}')
 
+        if verbose:
+            print("Now fetching file numbers and redshifts...")
+
         self.file_nums = self.gen_filenums()
         self.redshifts = self.fetch_redshifts()
 
