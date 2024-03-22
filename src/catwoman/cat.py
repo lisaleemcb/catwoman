@@ -92,9 +92,10 @@ class Cat:
 
     def gen_filenums(self):
         file_nums = []
-        for filename in os.listdir(f'{self.path_Pee}'):
-            basename, extension = os.path.splitext(filename)
-            file_nums.append(basename.split('electrons')[1])
+        for filename in os.listdir(f'{self.path_ion}'):
+            print(filename)
+	    basename, extension = os.path.splitext(filename)
+            file_nums.append(basename.split('out')[1])
 
         return np.sort(file_nums)
 
