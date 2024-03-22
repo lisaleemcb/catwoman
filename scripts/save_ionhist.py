@@ -27,25 +27,23 @@ for filename in os.listdir(path):
 
 sims = [[] for sn in sims_num]
 for i, sn in enumerate(sims_num):
-	sim = cat.Cat(sn,
-                verbose=True,
-                load_params=False,
-                load_Pee=False,
-		load_ion=True,
-		load_density=True,
-		path_sim=path)
-   # sim.params['spectra'] = sim.spectra
-   #
-	print(f'sim {sn} loaded, writing ion history...')
-	z = []
-    	xe = []
-    	for j, fn in enumerate(sim.file_nums):
-        	if sim.ion[i]['file_n'] == fn:
-            	z.append(sim.ion[j]['z'])
-            	xe.append(np.mean(sim.ion[j]['cube']))
+    sim = cat.Cat(sn,
+                    verbose=True,
+                    load_params=False,
+                    load_Pee=False,
+                    load_ion=True,
+                    load_density=True,
+                    path_sim=path)
+    print(f'sim {sn} loaded, writing ion history...')
+    z = []
+    xe = []
+    for j, fn in enumerate(sim.file_nums):
+       if sim.ion[i]['file_n'] == fn:
+           z.append(sim.ion[j]['z'])
+           xe.append(np.mean(sim.ion[j]['cube']))
 
-	history = {'z': z,
-               'xe': xe}
-	ion_histories[sn] = history
+    history = {'z': z,
+            'xe': xe}
+    ion_histories[sn] = history
 
 np.savez('ion_histories', ion_histories)
