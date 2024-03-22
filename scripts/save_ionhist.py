@@ -25,7 +25,6 @@ for filename in os.listdir(path):
 
     sims_num.append(num)
 
-sims = [[] for sn in sims_num]
 for i, sn in enumerate(sims_num):
     sim = cat.Cat(sn,
                     verbose=True,
@@ -34,6 +33,7 @@ for i, sn in enumerate(sims_num):
                     load_ion=True,
                     load_density=True,
                     path_sim=path)
+    print(sim)
     print('===================================')
     print(f'sim {sn} loaded, writing ion history...')
     print('===================================')
