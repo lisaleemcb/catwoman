@@ -38,7 +38,6 @@ for i, sn in enumerate(sims_num):
                     path_sim=path)
     print(sim.file_nums)
     print(sim.redshifts)
-    print(sim.density)
     print(f'ion cubes look like: {sim.ion}')
     z = []
     xe = []
