@@ -16,7 +16,8 @@ ion_histories = {}
 #                     path_Pee = 'ps_ee',
 #                     path_ion = '/obs/emcbride/xion',
 #                     path_dens = 'dens')
-#
+
+path = '/obs/emcbride/sims'
 sims_num = []
 for filename in os.listdir(path):
     basename, extension = os.path.splitext(filename)
@@ -24,23 +25,27 @@ for filename in os.listdir(path):
 
     sims_num.append(num)
 
-sims = [[] for n in sims_num]
-for i, n in enumerate(sims_num):
-    sim = cat.Cat(n,
-                verbose=False,
+sims = [[] for sn in sims_num]
+for i, sn in enumerate(sims_num):
+	sim = cat.Cat(sn,
+                verbose=True,
                 load_params=False,
-                load_spectra=False)
+                load_Pee=False,
+		load_ion=True,
+		load_density=True,
+		path_sim=path)
    # sim.params['spectra'] = sim.spectra
    #
-    z = []
-    xe = []
-    for i, n in enumerate(sim.file_nums):
-        if sim.spectra[i]['file_n'] == n:
-            z.append(sim.spectra[i]['z'])
-            xe.append(np.mean(sim.ion_cube[i]['ion_cube']))
+	print(f'sim {sn} loaded, writing ion history...')
+	z = []
+    	xe = []
+    	for j, fn in enumerate(sim.file_nums):
+        	if sim.ion[i]['file_n'] == fn:
+            	z.append(sim.ion[j]['z'])
+            	xe.append(np.mean(sim.ion[j]['cube']))
 
-    history = {'z': z,
+	history = {'z': z,
                'xe': xe}
-    ion_histories[sn] = history
+	ion_histories[sn] = history
 
 np.savez('ion_histories', ion_histories)
