@@ -119,7 +119,7 @@ class Cat:
     def fetch_redshifts(self):
         if self.verbose:
             print('Fetching redshifts...')
-        @fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
+        fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
         fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.dat'
 
         redshifts = {}
