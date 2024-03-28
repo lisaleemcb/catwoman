@@ -5,17 +5,6 @@ import catwoman.cat as cat
 
 
 ion_histories = {}
-# for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
-#     sim = cat.Cat(sn,
-#                     verbose=True,
-#                     load_ion=True,
-#                     load_density=True,
-#                     load_Pee=False,
-#                     path_sim='/obs/emcbride/sims',
-#                     path_params = 'Pee_spectra_LoReLi/formatted',
-#                     path_Pee = 'ps_ee',
-#                     path_ion = '/obs/emcbride/xion',
-#                     path_dens = 'dens')
 
 path = '/obs/emcbride/sims'
 
@@ -27,13 +16,14 @@ baddies = ['17681', '13492', '13498', '13495',
                 '15594', '12687']
 sims_num = []
 sims_none = []
-for filename in os.listdir(path):
-    basename, extension = os.path.splitext(filename)
-    sim, num = basename.split('u')
+# for filename in os.listdir(path):
+#     basename, extension = os.path.splitext(filename)
+#     sim, num = basename.split('u')
 
-    sims_num.append(num)
+#     sims_num.append(num)
 
-for i, sn in enumerate(sims_num):
+#for i, sn in enumerate(sims_num):
+for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
     if sn in baddies:
         print(f'Skipped the baddie {sn}')
 
