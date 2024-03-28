@@ -32,7 +32,7 @@ ion_escapefrac  	 	 	  /ionizing escape fraction/
 Xray_Lfunc  	 	 	  /X_ray luminosity fraction. 0.00192 eq f_x=1 for fiducial IMF/
 overdensity_thresh   	 	 	  /overdensity threshold for star formation/
 gasconversion_timescale	 	 	  /gas convension time scale for star formation in 10 Myr/
-feedback_efficieny 	 	 	  /feedback efficiency parameter
+feedback_efficiency 	 	 	  /feedback efficiency parameter
 hard_Xray_fraction 	 	 	  /hard_Xray_fraction
 log10_Mmin	 	  /log10 of Mmin of CMFs
 ion_escapefrac_thresh  	 	 	  /ionizing escape fraction_threshold/
