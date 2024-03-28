@@ -43,6 +43,7 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines
 
         z = []
         xe = []
+        Pee = []
 
         if len(sim.file_nums) == 0:
             print('No ion files in this sim :(')
@@ -54,13 +55,15 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines
                 if sim.ion[j]['file_n'] == fn:
                     z.append(sim.ion[j]['z'])
                     xe.append(np.mean(sim.ion[j]['cube']))
+                Pee = sim.calc_Pee()
 
         history = {'z': z,
-                'xe': xe}
+                'xe': xe,
+                'Pee': Pee}
         ion_histories[sn] = history
 
         print('===================================')
 
 np.save('sims_num.txt', sims_num)
 np.save('sims_none.txt', sims_none)
-np.savez('ion_histories', ion_histories)
+np.savez('histories', ion_histories)
