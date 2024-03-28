@@ -48,7 +48,7 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines
             print('No ion files in this sim :(')
             sims_none.append(i)
         if len(sim.file_nums) > 0:
-            sims_num.append(i)
+            sims_num.append(sn)
             for j, fn in enumerate(sim.file_nums):
                 print('Now calculating the ion history...')
                 if sim.ion[j]['file_n'] == fn:
