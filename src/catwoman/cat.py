@@ -14,12 +14,12 @@ class Cat:
                 verbose=False,
                 load_params=False,
                 load_Pee=False,
-                load_ion=False,
+                load_xion=False,
                 load_density=False,
                 path_sim=None,
                 path_params = None,
                 path_Pee = 'postprocessing/cubes/ps_dtb',
-                path_ion = 'postprocessing/cubes/xion',
+                path_xion = 'postprocessing/cubes/xxion',
                 path_density = 'postprocessing/cubes/dens',
                 ):
 
@@ -42,11 +42,11 @@ class Cat:
             else:
                 self.path_params = path_params
 
-        if load_ion:
+        if load_xion:
             if self.path_sim is not None:
-                self.path_ion = f'{self.path_sim}/simu{self.sim_n}/{path_ion}'
+                self.path_xion = f'{self.path_sim}/simu{self.sim_n}/{path_xion}'
             else:
-                self.path_ion = path_ion
+                self.path_xion = path_xion
 
         if load_density:
             if self.path_sim is not None:
@@ -60,44 +60,35 @@ class Cat:
                 print(f'params: {self.path_params}')
             if load_Pee:
                 print(f'electron power Pee: {self.path_Pee}')
-            if load_ion:
-                print(f'ionisation cubes: {self.path_ion}')
+            if load_xion:
+                print(f'ionisation cubes: {self.path_xion}')
             if load_density:
                 print(f'density cubes: {self.path_density}')
 
-        if verbose:
-            print("Now fetching file numbers and redshifts...")
-
-        if (load_Pee or load_ion or load_density):
+        if (load_Pee or load_xion or load_density):
+            if verbose:
+                print("fetching params since you asked so nicely...")
             self.file_nums = self.gen_filenums()
             self.redshifts = self.fetch_redshifts()
 
         if load_params:
-            if verbose:
-                print("fetching params since you asked so nicely...")
             self.params = self.fetch_params()
 
         if load_Pee:
-            if verbose:
-                print("fetching P_ee since you asked so nicely...")
             self.Pee = self.fetch_Pee()
 
-        if load_ion:
-            if verbose:
-                print("fetching ion cubes since you asked so nicely...")
-            self.ion = self.fetch_ion()
+        if load_xion:
+            self.xion = self.fetch_xion()
 
         if load_density:
-            if verbose:
-                print("fetching density cubes since you asked so nicely...")
             self.density = self.fetch_dens()
 
         print("Loaded and ready for science!!")
 
     def gen_filenums(self):
         file_nums = []
-        for filename in os.listdir(f'{self.path_ion}'):
-            basename, extension = os.path.splitext(filename)
+        for filename in os.listdir(f'{self.path_xion}'):
+            basename, extensxion = os.path.splitext(filename)
 
             file_nums.append(basename.split('out')[1])
 
@@ -105,11 +96,8 @@ class Cat:
 
     def fetch_params(self):
         if self.verbose:
-            print('Fetching simulations parameters...')
-        fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
-
-        if self.verbose:
-            print(f'Now reading in params from {self.path_params}/simu{self.sim_n}/{fn_params}')
+            print("fetching params since you asked so nicely...")
+        fn_params = f'runtime_parameters_simulatxion_{self.sim_n}_reformatted.txt'
 
         df = pd.read_csv(f'{self.path_params}/{fn_params}', sep='\t', header=None)
         params = dict(zip(list(df[1]), list(df[0])))
@@ -133,7 +121,7 @@ class Cat:
 
     def fetch_Pee(self, nbins=512):
         if self.verbose:
-            print('Fetching Pee Pee...')
+            print("fetching P_ee since you asked so nicely...")
             print(f'Reading in files from {self.path_Pee}')
 
         Pee_list = []
@@ -160,40 +148,40 @@ class Cat:
 
         return Pee_list
 
-    def fetch_ion(self, nbins=512):
+    def fetch_xion(self, nbins=512):
         if self.verbose:
-            print('Fetching ion cube...')
+            print("fetching xion cubes since you asked so nicely...")
 
-        ion_list = []
+        xion_list = []
         for n in self.file_nums:
             # if self.verbose:
             #     print(f'Now on file {n}')
 
-            ion_file = f'{self.path_ion}/xion_256_out{n}.dat'
+            xion_file = f'{self.path_xion}/xion_256_out{n}.dat'
 
             # if self.verbose:
-            #     print(f'Now reading in ion box from from {ion_file}')
+            #     print(f'Now reading in xion box from from {xion_file}')
 
-            if not os.path.isfile(ion_file):
-                raise FileNotFoundError(ion_file)
-            if os.path.isfile(ion_file):
-                ion = utils.read_cube(ion_file)
+            if not os.path.isfile(xion_file):
+                raise FileNotFoundError(xion_file)
+            if os.path.isfile(xion_file):
+                xion = utils.read_cube(xion_file)
 
             z = 0
             if n in self.redshifts.keys():
                 z = self.redshifts[n]
 
-            ion_dict = {'file_n': n,
+            xion_dict = {'file_n': n,
                         'z': float(z),
-                        'cube': ion}
+                        'cube': xion}
 
-            ion_list.append(ion_dict)
+            xion_list.append(xion_dict)
 
-        return ion_list
+        return xion_list
 
     def fetch_dens(self, nbins=512):
         if self.verbose:
-            print('Fetching density cube...')
+            print("fetching density cubes since you asked so nicely...")
 
         dens_list = []
         for n in self.file_nums:
@@ -224,7 +212,7 @@ class Cat:
     def calc_ion_history(self):
         z = []
         xe = []
-        for slice in self.ion:
+        for slice in self.xion:
             # if self.verbose:
             #    print(f'Now on file {n}')
             if self.verbose:
@@ -245,16 +233,16 @@ class Cat:
             file_n = den['file_n']
             z = den['z']
             den_cube = den['cube']
-            ion_cube = 0 # this is to increase the scope of the variable
-            if self.ion[i]['file_n'] == file_n:
-                ion = self.ion[i]
-                ion_cube = ion['cube']
+            xion_cube = 0 # this is to increase the scope of the variable
+            if self.xion[i]['file_n'] == file_n:
+                xion = self.xion[i]
+                xion_cube = xion['cube']
 
-            if self.ion[i]['file_n'] != file_n:
+            if self.xion[i]['file_n'] != file_n:
                 raise Exception("The file numbers don't match")
 
             delta = (den_cube - np.mean(den_cube)) / np.mean(den_cube)
-            ne = ion_cube * (1 + delta)
+            ne = xion_cube * (1 + delta)
             ne_overdensity = (ne - np.mean(ne)) / np.mean(ne)
 
             pk_ne = 0
