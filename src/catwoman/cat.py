@@ -40,7 +40,7 @@ class Cat:
             if self.path_sim is not None:
                 self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/{path_Pee}'
             else:
-                self.path_params = path_params
+                self.path_Pee = path_Pee
 
         if load_xion:
             if self.path_sim is not None:
