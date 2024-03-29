@@ -17,7 +17,11 @@ for filename in os.listdir(path):
 
 sims = [[] for n in sims_num]
 for i, n in enumerate(sims_num):
-    sim = cat.Cat(n, verbose=True, load_params=True, load_Pee=False)
+    sim = cat.Cat(n,
+                verbose=True,
+                load_params=True,
+                path_sim=path)
+
    # sim.params['spectra'] = sim.spectra
     sims[i] = sim.params
 
