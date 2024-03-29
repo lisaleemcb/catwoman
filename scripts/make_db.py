@@ -37,7 +37,8 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines
                     verbose=True,
                     load_params=True,
                     load_xion=True,
-                    path_sim=path)
+                    path_sim=path,
+                    path_params='/obs/emcbride/param_files')
 
         z, xe = sim.calc_ion_history()
         spl = CubicSpline(xe[skip:], z[skip:])
