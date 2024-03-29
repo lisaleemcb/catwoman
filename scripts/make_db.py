@@ -4,7 +4,9 @@ import pandas as pd
 import catwoman.cat as cat
 
 db_fn = 'Loreli_data.db'
-path = '/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatted/'
+
+path = '/obs/emcbride/sims'
+#path = '/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatted/'
 
 sims_num = []
 for filename in os.listdir(path):
@@ -15,7 +17,7 @@ for filename in os.listdir(path):
 
 sims = [[] for n in sims_num]
 for i, n in enumerate(sims_num):
-    sim = cat.Cat(n, verbose=False, load_params=True, load_spectra=True)
+    sim = cat.Cat(n, verbose=True, load_params=True, load_Pee=False)
    # sim.params['spectra'] = sim.spectra
     sims[i] = sim.params
 
