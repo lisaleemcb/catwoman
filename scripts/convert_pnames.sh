@@ -47,12 +47,12 @@ do
     # echo "$pname_new"
     if [[ $pname_new == 'box_size' ]]
         then
-           sed -nEre "s/,/./g" -e "s/\s+/ /g;" -e ""$(($i+$start_file))" s/\/.*/\t"$pname_new"/gp" $file
+           sed -nEe "s/,/./g" -e "s/\s+/ /g" -e ""$(($i+$start_file))" s/\/.*/\t"$pname_new"/gp" $file
     elif [[ $pname_new == 'elasticity_params' ]]
         then
         sed -nEe "s/\s+/ /g" -e "$(($(($i+$start_file)))) s/([0-9.]+) ([0-9.]+)/(\1, \2)/" -e "$(($(($i+$start_file)))) s/\/.*/\t$pname_new/gp" "$file"
     else
-        sed -nEre "s/\s+/ /g" -e ""$(($i+$start_file))" s/\/.*/\t"$pname_new"/gp" $file
+        sed -nEe "s/\s+/ /g" -e ""$(($i+$start_file))" s/\/.*/\t"$pname_new"/gp" $file
     fi
 done > "$new_file"
 
