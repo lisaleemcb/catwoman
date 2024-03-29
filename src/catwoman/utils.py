@@ -25,3 +25,12 @@ def convert_density(field, z):
     a = 1.0 # Planck.scale_factor(z)
 
     return field * (f1 * f2) / (f3 * (a * f4)**3)
+
+def calc_asymmetry(z_early, z_mid, z_end):
+    A = (z_early - z_mid) / (z_mid - z_end)
+
+    return A
+
+def duration(z_early, z_end):
+
+    return z_early - z_end
