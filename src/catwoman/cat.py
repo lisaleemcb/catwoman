@@ -69,7 +69,6 @@ class Cat:
             print("Now fetching file numbers and redshifts...")
 
         if (load_Pee or load_ion or load_density):
-
             self.file_nums = self.gen_filenums()
             self.redshifts = self.fetch_redshifts()
 
