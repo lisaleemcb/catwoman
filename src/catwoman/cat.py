@@ -19,7 +19,7 @@ class Cat:
                 path_sim=None,
                 path_params = None,
                 path_Pee = 'postprocessing/cubes/ps_dtb',
-                path_xion = 'postprocessing/cubes/xxion',
+                path_xion = 'postprocessing/cubes/xion',
                 path_density = 'postprocessing/cubes/dens',
                 ):
 
