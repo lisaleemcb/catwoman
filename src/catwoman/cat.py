@@ -12,8 +12,8 @@ class Cat:
     def __init__(self,
                 sim_n,
                 verbose=False,
-                load_Pee=False,
                 load_params=False,
+                load_Pee=False,
                 load_ion=False,
                 load_density=False,
                 path_sim=None,
@@ -68,8 +68,10 @@ class Cat:
         if verbose:
             print("Now fetching file numbers and redshifts...")
 
-        self.file_nums = self.gen_filenums()
-        self.redshifts = self.fetch_redshifts()
+        if (load_Pee or load_ion or load_density):
+
+            self.file_nums = self.gen_filenums()
+            self.redshifts = self.fetch_redshifts()
 
         if load_params:
             if verbose:
