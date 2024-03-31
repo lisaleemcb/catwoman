@@ -49,29 +49,35 @@ for sn in sims_num:
                     path_params='/obs/emcbride/param_files')
 
         #z, xe = sim.calc_ion_history()
-        snapshots = np.genfromtxt(f'{path}/simu{sn}/snapshots/diagnostics.dat')
-        z = snapshots[:,0]
-        xe = snapshots[:,1]
 
-        skip = utils.find_index(xe)
-        print(f"xe array is {xe[skip:]} starting at index {skip}")
-        print(f"z array is {z[skip:]} starting at index {skip}")
-        # interpolation to get z(xe)
-        spl = CubicSpline(xe[skip:], z[skip:])
+        params_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
+        if not os.path.isfile(params_file):
+            print(f'Skipped sim {sn}, added empty sim to list')
+            empties.append(sn)
+        else:
+            snapshots = np.genfromtxt(params_file)
+            z = snapshots[:,0]
+            xe = snapshots[:,1]
 
-        z_start = spl(xe_start)
-        z_mid = spl(xe_mid)
-        z_end = spl(xe_end)
-        A = utils.calc_asymmetry(z_start, z_mid, z_end)
-        duration = utils.duration(z_start, z_end)
+            skip = utils.find_index(xe)
+            print(f"xe array is {xe[skip:]} starting at index {skip}")
+            print(f"z array is {z[skip:]} starting at index {skip}")
+            # interpolation to get z(xe)
+            spl = CubicSpline(xe[skip:], z[skip:])
 
-        sim.params['z_start'] = z_start
-        sim.params['z_mid'] = z_mid
-        sim.params['z_end'] = z_end
-        sim.params['A'] = A
-        sim.params['duration'] = duration
+            z_start = spl(xe_start)
+            z_mid = spl(xe_mid)
+            z_end = spl(xe_end)
+            A = utils.calc_asymmetry(z_start, z_mid, z_end)
+            duration = utils.duration(z_start, z_end)
 
-        sims.append(sim.params)
+            sim.params['z_start'] = z_start
+            sim.params['z_mid'] = z_mid
+            sim.params['z_end'] = z_end
+            sim.params['A'] = A
+            sim.params['duration'] = duration
+
+            sims.append(sim.params)
 
 
 df = pd.DataFrame(sims)
