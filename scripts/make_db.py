@@ -16,15 +16,16 @@ xe_end = 0.98
 skip = 5 # this is because sometimes xion goes down, which prevents interpolation
 baddies = ['10446', '10476', '10500', '10452', '10506'] # sims with crazy ion histories
 
-# sims_num = []
-# for filename in os.listdir(path):
-#     basename, extension = os.path.splitext(filename)
-#     sim, num = basename.split('u')
+sims_num = []
+for filename in os.listdir(path):
+    basename, extension = os.path.splitext(filename)
+    sim, num = basename.split('u')
 
-#     sims_num.append(num)
+    sims_num.append(num)
 
 sims = []
-for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
+# for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
+for sn in sims_num:
     if sn in baddies:
         print(f'Skipped the baddie {sn}')
 
@@ -40,7 +41,12 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines
                     path_sim=path,
                     path_params='/obs/emcbride/param_files')
 
-        z, xe = sim.calc_ion_history()
+        #z, xe = sim.calc_ion_history()
+        snapshots = np.genfromtxt(f'/obs/emcbride/sims/simu{sn}/snapshots/diagnostics.dat')
+        z = snapshots[:,0]
+        xe = snapshots[:,1]
+
+        # interpolation to get z(xe)
         spl = CubicSpline(xe[skip:], z[skip:])
 
         z_start = spl(xe_start)
