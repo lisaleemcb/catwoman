@@ -17,8 +17,10 @@ skip = 5 # this is because sometimes xion goes down, which prevents interpolatio
 baddies = ['10446', '10476', '10500', '10452', '10506'] # sims with crazy ion histories
 
 sims_num = []
-for filename in os.listdir(path):
-    basename, extension = os.path.splitext(filename)
+for dir in os.listdir(path):
+    print(f'Now parsing simulation directories in {path}')
+    print(f'On sim {dir}')
+    basename, extension = os.path.splitext(dir)
     sim, num = basename.split('u')
 
     sims_num.append(num)
