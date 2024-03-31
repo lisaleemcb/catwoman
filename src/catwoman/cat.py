@@ -31,27 +31,27 @@ class Cat:
         self.verbose = verbose
 
         if load_params:
-            if self.path_params is not None:
+            if path_params is not None:
                 self.path_params = path_params
             else:
                 self.path_params = f'{self.path_sim}/simu{self.sim_n}'
 
         if load_Pee:
-            if self.path_Pee is not None:
+            if path_Pee is not None:
                 self.path_Pee = path_Pee
             else:
                 self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/{path_Pee}'
 
 
         if load_xion:
-            if self.path_xion is not None:
+            if path_xion is not None:
                 self.path_xion = path_xion
             else:
                 self.path_xion = f'{self.path_sim}/simu{self.sim_n}/{path_xion}'
 
 
         if load_density:
-            if self.path_density is not None:
+            if path_density is not None:
                 self.path_density = path_density
             else:
 
