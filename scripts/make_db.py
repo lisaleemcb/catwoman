@@ -83,6 +83,9 @@ for sn in sims_num:
 df = pd.DataFrame(sims)
 df.to_csv(db_fn)
 
+print('saving empties list...')
+np.save('empties', empties)
+
 print('example sim is')
 print(sims[5])
 
