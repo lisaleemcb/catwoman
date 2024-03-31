@@ -46,7 +46,7 @@ for sn in sims_num:
                     path_params='/obs/emcbride/param_files')
 
         #z, xe = sim.calc_ion_history()
-        snapshots = np.genfromtxt(f'/obs/emcbride/sims/simu{sn}/snapshots/diagnostics.dat')
+        snapshots = np.genfromtxt(f'{path}/simu{sn}/snapshots/diagnostics.dat')
         z = snapshots[:,0]
         xe = snapshots[:,1]
 
