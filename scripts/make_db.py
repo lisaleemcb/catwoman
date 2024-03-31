@@ -41,27 +41,32 @@ for sn in sims_num:
         print(f'Loading sim {sn}')
         print('===================================')
 
+        path_params = '/obs/emcbride/param_files'
+        params_file = f'{path_params}/runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
+        if not os.path.isfile(params_file):
+            print(f'Skipped sim {sn}, added empty sim to list')
+            empties.append(sn)
+
         sim = cat.Cat(sn,
                     verbose=True,
                     load_params=True,
                     load_xion=False,
                     path_sim=path,
-                    path_params='/obs/emcbride/param_files')
+                    path_params=path_params)
 
         #z, xe = sim.calc_ion_history()
 
-        params_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
-        if not os.path.isfile(params_file):
+        snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
+        if not os.path.isfile(snapshots_file):
             print(f'Skipped sim {sn}, added empty sim to list')
             empties.append(sn)
         else:
-            snapshots = np.genfromtxt(params_file)
+            snapshots = np.genfromtxt(snapshots_file)
             z = snapshots[:,0]
             xe = snapshots[:,1]
 
             skip = utils.find_index(xe)
-            print(f"xe array is {xe[skip:]} starting at index {skip}")
-            print(f"z array is {z[skip:]} starting at index {skip}")
+
             # interpolation to get z(xe)
             spl = CubicSpline(xe[skip:], z[skip:])
 
