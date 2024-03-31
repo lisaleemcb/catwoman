@@ -100,7 +100,7 @@ class Cat:
     def fetch_params(self):
         if self.verbose:
             print("fetching params since you asked so nicely...")
-        fn_params = f'runtime_parameters_simulatxion_{self.sim_n}_reformatted.txt'
+        fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
 
         df = pd.read_csv(f'{self.path_params}/{fn_params}', sep='\t', header=None)
         params = dict(zip(list(df[1]), list(df[0])))
