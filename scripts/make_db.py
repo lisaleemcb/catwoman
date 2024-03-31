@@ -98,6 +98,12 @@ df.to_csv(db_fn)
 print('saving empties list...')
 np.save('empties', empties)
 
+print('saving empties list...')
+np.save('empties', empties)
+
+print('saving ionisation histories...')
+np.savez('histories', ion_histories)
+
 print('example sim is')
 print(sims[5])
 
