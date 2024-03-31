@@ -14,7 +14,7 @@ xe_start = .02
 xe_mid = 0.5
 xe_end = 0.98
 
-skip = 5 # this is because sometimes xion goes down, which prevents interpolation
+#skip = 5 # this is because sometimes xion goes down, which prevents interpolation
 baddies = ['10446', '10476', '10500', '10452', '10506'] # sims with crazy ion histories
 
 sims_num = []
@@ -50,6 +50,7 @@ for sn in sims_num:
         z = snapshots[:,0]
         xe = snapshots[:,1]
 
+        skip = utils.find_index(xe)
         # interpolation to get z(xe)
         spl = CubicSpline(xe[skip:], z[skip:])
 
