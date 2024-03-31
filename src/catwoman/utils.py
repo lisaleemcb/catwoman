@@ -39,7 +39,7 @@ def find_index(arr):
     for i in range(arr.size - 1):
         a = arr[i:]
        # print(f'array looks like {a}')
-        if np.all(a[:-1] <= a[1:]):
+        if np.all(a[:-1] < a[1:]):
             return i
 
     print('No monotonically increasing part of this function. Are you sure this is correct?')
