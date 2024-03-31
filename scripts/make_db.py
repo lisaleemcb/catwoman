@@ -51,8 +51,8 @@ for sn in sims_num:
         xe = snapshots[:,1]
 
         skip = utils.find_index(xe)
-        print(f"xe array is xe[skip:] starting at index {skip}")
-        print(f"z array is z[skip:] starting at index {skip}")
+        print(f"xe array is {xe[skip:]} starting at index {skip}")
+        print(f"z array is {z[skip:]} starting at index {skip}")
         # interpolation to get z(xe)
         spl = CubicSpline(xe[skip:], z[skip:])
 
