@@ -40,7 +40,7 @@ for sn in sims_num:
         sim = cat.Cat(sn,
                     verbose=True,
                     load_params=True,
-                    load_xion=True,
+                    load_xion=False,
                     path_sim=path,
                     path_params='/obs/emcbride/param_files')
 
