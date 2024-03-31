@@ -16,7 +16,7 @@ xe_end = 0.98
 
 #skip = 5 # this is because sometimes xion goes down, which prevents interpolation
 baddies = ['10446', '10476', '10500', '10452', '10506'] # sims with crazy ion histories
-empties = ['17941'] # doesn't contain a critical file
+empties = ['17941', '10598', '19086', '12022', '10468', '17989', '13219', '10197', '16691', '10692', '19085'] # doesn't contain a critical file
 
 sims_num = []
 for dir in os.listdir(path):
