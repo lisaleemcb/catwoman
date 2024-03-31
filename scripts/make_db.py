@@ -42,7 +42,7 @@ for sn in sims_num:
         print('===================================')
 
         path_params = '/obs/emcbride/param_files'
-        params_file = f'{path_params}/runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
+        params_file = f'{path_params}/runtime_parameters_simulation_{sn}_reformatted.txt'
         if not os.path.isfile(params_file):
             print(f'Skipped sim {sn}, added empty sim to list')
             empties.append(sn)
