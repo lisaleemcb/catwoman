@@ -19,6 +19,7 @@ baddies = ['10446', '10476', '10500', '10452', '10506'] # sims with crazy ion hi
 sims_num = []
 for filename in os.listdir(path):
     basename, extension = os.path.splitext(filename)
+    print(basename, extension)
     sim, num = basename.split('u')
 
     sims_num.append(num)
