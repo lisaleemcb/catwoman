@@ -21,7 +21,6 @@ for dir in os.listdir(path):
     print(f'Now parsing simulation directories in {path}')
     print(f'On sim {dir}')
 
-    print(basename, extension)
     basename, extension = os.path.splitext(dir)
     sim, num = basename.split('u')
 
