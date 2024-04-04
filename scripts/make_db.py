@@ -8,6 +8,9 @@ from catwoman import utils
 
 path = '/obs/emcbride/sims'
 db_fn = 'Loreli_data.db'
+ion_fn = 'ion_histories'
+empties_fn = 'empties'
+Pee_spectra_fn = 'Pee_spectra'
 
 # The early redshifts wiggle a bit, so I have to cut out the first few elements to make this a proper function
 xe_start = .02
@@ -29,6 +32,7 @@ for dir in os.listdir(path):
     sims_num.append(num)
 
 ion_histories = {}
+Pee_spectra = {}
 sims = []
 # for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
 for sn in sims_num:
@@ -71,8 +75,10 @@ for sn in sims_num:
 
                 history = {'z': z[skip:],
                         'xe': xe[skip:]}
-
                 ion_histories[sn] = history
+
+                Pee = sim.calc_Pee()
+                Pee_spectra[sn] = Pee
 
                 # interpolation to get z(xe)
                 spl = CubicSpline(xe[skip:], z[skip:])
@@ -92,19 +98,20 @@ for sn in sims_num:
                 sims.append(sim.params)
 
 
+print(f'saving database to {db_fn}...')
 df = pd.DataFrame(sims)
 df.to_csv(db_fn)
 
-print('saving empties list...')
-np.save('empties', empties)
+print(f'saving empties list to {empties_fn}...')
+np.save(empties_fn, empties)
 
-print('saving empties list...')
-np.save('empties', empties)
+print(f'saving ionisation histories to {ion_fn}...')
+np.savez(ion_fn, ion_histories)
 
-print('saving ionisation histories...')
-np.savez('histories', ion_histories)
+print(f'saving electron power spectra to {Pee_spectra_fn}...')
+np.savez(Pee_spectra_fn, Pee_spectra)
 
 print('example sim is')
 print(sims[5])
 
-print(f'data saved to {db_fn}')
+print(f'done!')
