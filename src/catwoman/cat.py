@@ -18,10 +18,9 @@ class Cat:
                 load_density=False,
                 path_sim=None,
                 path_params = None,
-                path_Pee = 'postprocessing/cubes/ps_dtb',
-                path_xion = 'postprocessing/cubes/xion',
-                path_density = 'postprocessing/cubes/dens',
-                ):
+                path_Pee = None,
+                path_xion = None,
+                path_density = None):
 
         print(f'Loading sim number {sim_n}...')
 
@@ -40,14 +39,14 @@ class Cat:
             if path_Pee is not None:
                 self.path_Pee = path_Pee
             else:
-                self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/{path_Pee}'
+                self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/ps_ee'
 
 
         if load_xion:
             if path_xion is not None:
                 self.path_xion = path_xion
             else:
-                self.path_xion = f'{self.path_sim}/simu{self.sim_n}/{path_xion}'
+                self.path_xion = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/xion'
 
 
         if load_density:
@@ -55,7 +54,7 @@ class Cat:
                 self.path_density = path_density
             else:
 
-                self.path_density = f'{self.path_sim}/simu{self.sim_n}/{path_density}'
+                self.path_density = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens'
 
         if verbose:
             print('You have told me that data lives in the following places:')
