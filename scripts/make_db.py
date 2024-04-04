@@ -56,7 +56,8 @@ for sn in sims_num:
             sim = cat.Cat(sn,
                         verbose=True,
                         load_params=True,
-                        load_xion=False,
+                        load_xion=True,
+                        load_density=True,
                         path_sim=path,
                         path_params=path_params)
 
