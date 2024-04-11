@@ -35,7 +35,7 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines
                         verbose=True,
                         load_params=False,
                         load_Pee=False,
-                        load_ion=True,
+                        load_xion=True,
                         load_density=True,
                         path_sim=path)
         print(f'files: {sim.file_nums}')
@@ -46,15 +46,15 @@ for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines
         Pee = []
 
         if len(sim.file_nums) == 0:
-            print('No ion files in this sim :(')
-            sims_none.append(i)
+            print(f'No ion files in sim {sn} :(')
+            sims_none.append(sn)
         if len(sim.file_nums) > 0:
             sims_num.append(sn)
             for j, fn in enumerate(sim.file_nums):
                 print('Now calculating the ion history...')
-                if sim.ion[j]['file_n'] == fn:
-                    z.append(sim.ion[j]['z'])
-                    xe.append(np.mean(sim.ion[j]['cube']))
+                if sim.xion[j]['file_n'] == fn:
+                    z.append(sim.xion[j]['z'])
+                    xe.append(np.mean(sim.xion[j]['cube']))
                 Pee = sim.calc_Pee()
 
         history = {'z': z,

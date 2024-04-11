@@ -48,7 +48,12 @@ for sn in sims_num:
 
         path_params = '/obs/emcbride/param_files'
         params_file = f'{path_params}/runtime_parameters_simulation_{sn}_reformatted.txt'
+        redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
+
         if not os.path.isfile(params_file):
+            print(f'Skipped sim {sn}, added empty sim to list')
+            empties.append(sn)
+        elif not os.path.isfile(redshift_file):
             print(f'Skipped sim {sn}, added empty sim to list')
             empties.append(sn)
 
@@ -69,6 +74,7 @@ for sn in sims_num:
                 print(f'Skipped sim {sn}, added empty sim to list')
                 empties.append(sn)
             else:
+                print('Now onto the science!')
                 snapshots = np.genfromtxt(snapshots_file)
                 z = snapshots[:,0]
                 xe = snapshots[:,1]
@@ -98,6 +104,8 @@ for sn in sims_num:
                 sim.params['duration'] = duration
 
                 sims.append(sim.params)
+
+                print('Summary statistics saved to params dict...')
 
 
 print(f'saving database to {db_fn}...')
