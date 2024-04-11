@@ -1,6 +1,7 @@
 import argparse
 import logging
 import sys
+import numpy as np
 
 from catwoman import __version__
 

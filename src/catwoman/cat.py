@@ -212,6 +212,9 @@ class Cat:
         return dens_list
 
     def calc_ion_history(self):
+        if self.verbose:
+            print(f"Calculating ionisation history...")
+
         z = []
         xe = []
         for slice in self.xion:
