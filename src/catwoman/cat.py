@@ -169,15 +169,15 @@ class Cat:
             if os.path.isfile(xion_file):
                 xion = utils.read_cube(xion_file)
 
-            z = 0
-            if n in self.redshifts.keys():
-                z = self.redshifts[n]
+                z = 0
+                if n in self.redshifts.keys():
+                    z = self.redshifts[n]
 
-            xion_dict = {'file_n': n,
-                        'z': float(z),
-                        'cube': xion}
+                    xion_dict = {'file_n': n,
+                                'z': float(z),
+                                'cube': xion}
 
-            xion_list.append(xion_dict)
+                    xion_list.append(xion_dict)
 
         return xion_list
 
@@ -204,10 +204,10 @@ class Cat:
                     z = self.redshifts[n]
                     cube = utils.convert_density(dens_cube, z)
 
-                dens_dict = {'file_n': n,
-                            'z': float(z),
-                            'cube': cube}
-                dens_list.append(dens_dict)
+                    dens_dict = {'file_n': n,
+                                'z': float(z),
+                                'cube': cube}
+                    dens_list.append(dens_dict)
 
         return dens_list
 
