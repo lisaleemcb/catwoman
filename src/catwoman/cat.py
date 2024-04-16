@@ -22,7 +22,9 @@ class Cat:
                 path_xion = None,
                 path_density = None):
 
+        print(f'==============================')
         print(f'Loading sim number {sim_n}...')
+        print(f'==============================')
 
         self.sim_n = sim_n
         self.path_sim = path_sim
@@ -58,6 +60,7 @@ class Cat:
 
         if verbose:
             print('You have told me that data lives in the following places:')
+            print('')
             if load_params:
                 print(f'params: {self.path_params}')
             if load_Pee:
@@ -66,6 +69,7 @@ class Cat:
                 print(f'ionisation cubes: {self.path_xion}')
             if load_density:
                 print(f'density cubes: {self.path_density}')
+            print('')
 
         if (load_Pee or load_xion or load_density):
             if verbose:
@@ -85,6 +89,7 @@ class Cat:
         if load_density:
             self.density = self.fetch_dens()
 
+        print('')
         print("Loaded and ready for science!!")
 
     def gen_filenums(self):
@@ -257,7 +262,7 @@ class Cat:
                     print('Using the k values you asked for')
                 pk_ne, bins_ne = get_power(ne_overdensity, 296.0, bins=k)
             if k is None:
-                pk_ne, bins_ne = get_power(ne_overdensity, 296.0)
+                pk_ne, bins_ne = get_power(ne_overdensity, 296.0, log_bins=True)
             Pee_dict = {'file_n': file_n,
                             'z': z,
                             'k': bins_ne,
@@ -265,3 +270,30 @@ class Cat:
             Pee_list.append(Pee_dict)
 
         return Pee_list
+
+    def calc_Pm(self, k=None):
+        Pm_list = []
+        for i, den in enumerate(self.density):
+            if self.verbose:
+                print(f"Calculating matter power spectrum at redshift {den['z']}")
+
+            file_n = den['file_n']
+            z = den['z']
+            den_cube = den['cube']
+
+            delta = (den_cube - np.mean(den_cube)) / np.mean(den_cube)
+            pk = 0
+            bins = 0
+            if k is not None:
+                if self.verbose:
+                    print('Using the k values you asked for')
+                pk, bins = get_power(delta, 296.0, bins=k)
+            if k is None:
+                pk, __builtins__ = get_power(delta, 296.0)
+            Pm_dict = {'file_n': file_n,
+                            'z': z,
+                            'k': bins,
+                            'P_k': pk}
+            Pm_list.append(Pm_dict)
+
+        return Pm_list
