@@ -73,7 +73,7 @@ class Cat:
 
         if (load_Pee or load_xion or load_density):
             if verbose:
-                print("fetching params since you asked so nicely...")
+                print("Fetching reference files...")
             self.file_nums = self.gen_filenums()
             self.redshifts = self.fetch_redshifts()
 
@@ -103,7 +103,7 @@ class Cat:
 
     def fetch_params(self):
         if self.verbose:
-            print("fetching params since you asked so nicely...")
+            print("Fetching params since you asked so nicely...")
         fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
 
         df = pd.read_csv(f'{self.path_params}/{fn_params}', sep='\t', header=None)
@@ -128,7 +128,7 @@ class Cat:
 
     def fetch_Pee(self, nbins=512):
         if self.verbose:
-            print("fetching P_ee since you asked so nicely...")
+            print("Fetching P_ee since you asked so nicely...")
             print(f'Reading in files from {self.path_Pee}')
 
         Pee_list = []
@@ -157,7 +157,7 @@ class Cat:
 
     def fetch_xion(self, nbins=512):
         if self.verbose:
-            print("fetching xion cubes since you asked so nicely...")
+            print("Fetching xion cubes since you asked so nicely...")
 
         xion_list = []
         for n in self.file_nums:
@@ -188,7 +188,7 @@ class Cat:
 
     def fetch_dens(self, nbins=512):
         if self.verbose:
-            print("fetching density cubes since you asked so nicely...")
+            print("Fetching density cubes since you asked so nicely...")
 
         dens_list = []
         for n in self.file_nums:
@@ -234,7 +234,7 @@ class Cat:
 
         return z, xe
 
-    def calc_Pee(self, k=None):
+    def calc_Pee(self, k=None, bins=25, log_bins=True):
         Pee_list = []
         for i, den in enumerate(self.density):
             if self.verbose:
@@ -255,24 +255,28 @@ class Cat:
             ne = xion_cube * (1 + delta)
             ne_overdensity = (ne - np.mean(ne)) / np.mean(ne)
 
-            pk_ne = 0
-            bins_ne = 0
+            pk = 0
+            bins = 0
             if k is not None:
                 if self.verbose:
                     print('Using the k values you asked for')
-                pk_ne, bins_ne = get_power(ne_overdensity, 296.0, bins=k)
+                pk, bins = get_power(ne_overdensity, 296.0, bins=k)
+
             if k is None:
-                pk_ne, bins_ne = get_power(ne_overdensity, 296.0, log_bins=True)
-            Pee_dict = {'file_n': file_n,
-                            'z': z,
-                            'k': bins_ne,
-                            'P_k': pk_ne}
-            Pee_list.append(Pee_dict)
+                pk, bins = get_power(ne_overdensity, 296.0,
+                                bins=bins,
+                                log_bins=log_bins)
+
+                Pee_dict = {'file_n': file_n,
+                                'z': z,
+                                'k': bins,
+                                'P_k': pk}
+                Pee_list.append(Pee_dict)
 
         return Pee_list
 
-    def calc_Pm(self, k=None):
-        Pm_list = []
+    def calc_Pdd(self, k=None, bins=25, log_bins=True):
+        Pdd_list = []
         for i, den in enumerate(self.density):
             if self.verbose:
                 print(f"Calculating matter power spectrum at redshift {den['z']}")
@@ -289,11 +293,12 @@ class Cat:
                     print('Using the k values you asked for')
                 pk, bins = get_power(delta, 296.0, bins=k)
             if k is None:
-                pk, __builtins__ = get_power(delta, 296.0)
-            Pm_dict = {'file_n': file_n,
+                pk, __builtins__ = get_power(delta, 296.0,
+                                    bins=bins, log_bins=log_bins)
+            Pdd_dict = {'file_n': file_n,
                             'z': z,
                             'k': bins,
                             'P_k': pk}
-            Pm_list.append(Pm_dict)
+            Pdd_list.append(Pdd_dict)
 
-        return Pm_list
+        return Pdd_list
