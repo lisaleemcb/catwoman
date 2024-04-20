@@ -234,7 +234,7 @@ class Cat:
 
         return z, xe
 
-    def calc_Pee(self, k=None, bins=25, log_bins=True):
+    def calc_Pee(self, k=None, n_bins=25, log_bins=True):
         Pee_list = []
         for i, den in enumerate(self.density):
             if self.verbose:
@@ -264,7 +264,7 @@ class Cat:
 
             if k is None:
                 pk, bins = get_power(ne_overdensity, 296.0,
-                                bins=bins,
+                                bins=n_bins,
                                 log_bins=log_bins)
 
                 Pee_dict = {'file_n': file_n,
@@ -275,7 +275,7 @@ class Cat:
 
         return Pee_list
 
-    def calc_Pdd(self, k=None, bins=25, log_bins=True):
+    def calc_Pdd(self, k=None, n_bins=25, log_bins=True):
         Pdd_list = []
         for i, den in enumerate(self.density):
             if self.verbose:
@@ -293,8 +293,8 @@ class Cat:
                     print('Using the k values you asked for')
                 pk, bins = get_power(delta, 296.0, bins=k)
             if k is None:
-                pk, __builtins__ = get_power(delta, 296.0,
-                                    bins=bins, log_bins=log_bins)
+                pk, bins = get_power(delta, 296.0,
+                                    bins=n_bins, log_bins=log_bins)
             Pdd_dict = {'file_n': file_n,
                             'z': z,
                             'k': bins,
