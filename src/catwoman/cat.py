@@ -16,6 +16,7 @@ class Cat:
                 load_Pee=False,
                 load_xion=False,
                 load_density=False,
+                initialise_spectra=False,
                 path_sim=None,
                 path_params = None,
                 path_Pee = None,
@@ -43,19 +44,16 @@ class Cat:
             else:
                 self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/ps_ee'
 
-
         if load_xion:
             if path_xion is not None:
                 self.path_xion = path_xion
             else:
                 self.path_xion = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/xion'
 
-
         if load_density:
             if path_density is not None:
                 self.path_density = path_density
             else:
-
                 self.path_density = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens'
 
         if verbose:
@@ -75,12 +73,14 @@ class Cat:
             if verbose:
                 print("Fetching reference files...")
             self.file_nums = self.gen_filenums()
-            self.redshifts = self.fetch_redshifts()
+            self.redshift_keys = self.fetch_redshifts()
+            self.z = self.redshift_keys.values()
 
         if load_params:
             self.params = self.fetch_params()
 
         if load_Pee:
+            print('Loading pre-calc Pee...')
             self.Pee = self.fetch_Pee()
 
         if load_xion:
@@ -88,6 +88,15 @@ class Cat:
 
         if load_density:
             self.density = self.fetch_dens()
+
+        if initialise_spectra:
+            if verbose:
+                print('')
+                print('Initialising spectra. This could take a while...')
+                print('')
+            self.Pdd = self.calc_Pdd()
+            self.Pee = self.calc_Pee()
+            self.z, self.xe = self.calc_ion_history()
 
         print('')
         print("Loaded and ready for science!!")
@@ -118,13 +127,13 @@ class Cat:
         # fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
         fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.dat'
 
-        redshifts = {}
+        redshift_keys = {}
         with open(fn_z) as f:
                     for line in f:
                         (val, key) = line.split()
-                        redshifts[key] = val
+                        redshift_keys[key] = float(val)
 
-        return redshifts
+        return redshift_keys
 
     def fetch_Pee(self, nbins=512):
         if self.verbose:
@@ -144,8 +153,8 @@ class Cat:
                 P_ee = np.loadtxt(Pee_file).T
 
                 z = 0
-                if n in self.redshifts.keys():
-                    z = self.redshifts[n]
+                if n in self.redshift_keys.keys():
+                    z = self.redshift_keys[n]
 
                 Pee_dict = {'file_n': n,
                                 'z': float(z),
@@ -175,8 +184,8 @@ class Cat:
                 xion = utils.read_cube(xion_file)
 
                 z = 0
-                if n in self.redshifts.keys():
-                    z = self.redshifts[n]
+                if n in self.redshift_keys.keys():
+                    z = self.redshift_keys[n]
 
                     xion_dict = {'file_n': n,
                                 'z': float(z),
@@ -205,8 +214,8 @@ class Cat:
             if os.path.isfile(dens_file):
                 dens_cube = utils.read_cube(dens_file)
                 z = 0
-                if n in self.redshifts.keys():
-                    z = self.redshifts[n]
+                if n in self.redshift_keys.keys():
+                    z = self.redshift_keys[n]
                     cube = utils.convert_density(dens_cube, z)
 
                     dens_dict = {'file_n': n,
@@ -232,7 +241,10 @@ class Cat:
             z.append(slice['z'])
             xe.append(np.mean(cube))
 
-        return z, xe
+        if self.verbose:
+            print('')
+
+        return np.asarray(z), np.asarray(xe)
 
     def calc_Pee(self, k=None, n_bins=25, log_bins=True):
         Pee_list = []
@@ -273,6 +285,9 @@ class Cat:
                                 'P_k': pk}
                 Pee_list.append(Pee_dict)
 
+        if self.verbose:
+            print('')
+
         return Pee_list
 
     def calc_Pdd(self, k=None, n_bins=25, log_bins=True):
@@ -300,5 +315,8 @@ class Cat:
                             'k': bins,
                             'P_k': pk}
             Pdd_list.append(Pdd_dict)
+
+        if self.verbose:
+            print('')
 
         return Pdd_list
