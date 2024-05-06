@@ -1,172 +1,323 @@
-import argparse
-import logging
-import sys
+from logging import NullHandler
+import os
 import numpy as np
+import pandas as pd
 
-from catwoman import __version__
+import powerbox as pb
+from powerbox import get_power
 
-__author__ = "Lisa McBride"
-__copyright__ = "Lisa McBride"
-__license__ = "MIT"
+import catwoman.utils as utils
 
-_logger = logging.getLogger(__name__)
+class Cat:
+    def __init__(self,
+                sim_n,
+                verbose=False,
+                load_params=False,
+                load_Pee=False,
+                load_xion=False,
+                load_density=False,
+                initialise_spectra=False,
+                path_sim=None,
+                path_params = None,
+                path_Pee = None,
+                path_xion = None,
+                path_density = None):
 
-def read_cube(path, type=np.float64):
-    """Fibonacci example function
+        print(f'==============================')
+        print(f'Loading sim number {sim_n}...')
+        print(f'==============================')
 
-    Args:
-      n (int): integer
+        self.sim_n = sim_n
+        self.path_sim = path_sim
+        self.path_Pee = path_Pee
+        self.verbose = verbose
 
-    Returns:
-      int: n-th Fibonacci number
-    """
-    try :
-        cube = np.fromfile(path, dtype=type)
-    except FileNotFoundError :
-        print(" !!!!!! file not found : "+ path)
-        cube = np.zeros(256**3)
-        print("moving on...")
-    shape = np.shape(cube)[0]
-    length = int(shape**(1/3)) +1
+        if load_params:
+            if path_params is not None:
+                self.path_params = path_params
+            else:
+                self.path_params = f'{self.path_sim}/simu{self.sim_n}'
 
-    cube =np.reshape(cube, (length,length,length)).T
-    shape = np.shape(cube)
+        if load_Pee:
+            if path_Pee is not None:
+                self.path_Pee = path_Pee
+            else:
+                self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/ps_ee'
 
-    return cube
+        if load_xion:
+            if path_xion is not None:
+                self.path_xion = path_xion
+            else:
+                self.path_xion = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/xion'
 
-def fetch_spectra(file_n, sim_n=10038):
-    """Fibonacci example function
+        if load_density:
+            if path_density is not None:
+                self.path_density = path_density
+            else:
+                self.path_density = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens'
 
-    Args:
-      n (int): integer
+        if verbose:
+            print('You have told me that data lives in the following places:')
+            print('')
+            if load_params:
+                print(f'params: {self.path_params}')
+            if load_Pee:
+                print(f'electron power Pee: {self.path_Pee}')
+            if load_xion:
+                print(f'ionisation cubes: {self.path_xion}')
+            if load_density:
+                print(f'density cubes: {self.path_density}')
+            print('')
 
-    Returns:
-      int: n-th Fibonacci number
-    """
-    print(f'Now parsing /Users/emcbride/kSZ/data/Pee_spectra_LoReLi/raw/simu{sim_n}/')
-    z_fn = f'/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/raw/simu{sim_n}/redshift_list.dat'
-    redshifts = {}
+        if (load_Pee or load_xion or load_density):
+            if verbose:
+                print("Fetching reference files...")
+            self.file_nums = self.gen_filenums()
+            self.redshift_keys = self.fetch_redshifts()
+            self.z = self.redshift_keys.values()
 
-    with open(z_fn) as f:
-        for line in f:
-           (val, key) = line.split()
-           redshifts[key] = val
+        if load_params:
+            self.params = self.fetch_params()
 
-    #print(redshifts)
+        if load_Pee:
+            print('Loading pre-calc Pee...')
+            self.Pee = self.fetch_Pee()
 
-    Pee_list = []
-    for n in file_n:
-        print(f'Now on file {n}')
+        if load_xion:
+            self.xion = self.fetch_xion()
 
-        ion_file = f'/Users/emcbride/kSZ/data/xion/xion_256_out{n}.dat'
-        ion_cube = read_cube(ion_file)
+        if load_density:
+            self.density = self.fetch_dens()
 
-        dens_file = f'/Users/emcbride/kSZ/data/dens/dens_256_out{n}.dat'
-        dens_cube = read_cube(dens_file)
+        if initialise_spectra:
+            if verbose:
+                print('')
+                print('Initialising spectra. This could take a while...')
+                print('')
+            self.Pbb = self.calc_Pbb()
+            self.Pee = self.calc_Pee()
+            self.k = self.Pee[0]['k']
+            self.z, self.xe = self.calc_ion_history()
 
-        Pee_file = f'/Users/emcbride/kSZ/data/Pee_spectra_LoReLi/formatted/simu{sim_n}/postprocessing/cubes/ps_dtb/powerspectrum_electrons{n}.dat'
-        P_ee = np.loadtxt(Pee_file).T
-        z = redshifts[n]
+        print('')
+        print("Loaded and ready for science!!")
 
-        spectra_dict = {'file_n': n,
-                        'z': float(z),
-                        'dens_cube': dens_cube,
-                        'ion_cube': ion_cube,
-                        'k': P_ee[0],
-                        'P_k': P_ee[1]}
-        Pee_list.append(spectra_dict)
+    def gen_filenums(self):
+        file_nums = []
+        for filename in os.listdir(f'{self.path_xion}'):
+            basename, extensxion = os.path.splitext(filename)
 
-    return Pee_list
+            file_nums.append(basename.split('out')[1])
 
+        return np.sort(file_nums)
 
-# ---- CLI ----
-# The functions defined in this section are wrappers around the main Python
-# API allowing them to be called directly from the terminal as a CLI
-# executable/script.
+    def fetch_params(self):
+        if self.verbose:
+            print("Fetching params since you asked so nicely...")
+        fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
 
+        df = pd.read_csv(f'{self.path_params}/{fn_params}', sep='\t', header=None)
+        params = dict(zip(list(df[1]), list(df[0])))
+        params['sim_n'] = self.sim_n
 
-def parse_args(args):
-    """Parse command line parameters
+        return params
 
-    Args:
-      args (List[str]): command line parameters as list of strings
-          (for example  ``["--help"]``).
+    def fetch_redshifts(self):
+        if self.verbose:
+            print('Fetching redshifts...')
+        # fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
+        fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.dat'
 
-    Returns:
-      :obj:`argparse.Namespace`: command line parameters namespace
-    """
-    parser = argparse.ArgumentParser(description="Just a Fibonacci demonstration")
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"catwoman {__version__}",
-    )
-    parser.add_argument(dest="n", help="n-th Fibonacci number", type=int, metavar="INT")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="loglevel",
-        help="set loglevel to INFO",
-        action="store_const",
-        const=logging.INFO,
-    )
-    parser.add_argument(
-        "-vv",
-        "--very-verbose",
-        dest="loglevel",
-        help="set loglevel to DEBUG",
-        action="store_const",
-        const=logging.DEBUG,
-    )
-    return parser.parse_args(args)
+        redshift_keys = {}
+        with open(fn_z) as f:
+                    for line in f:
+                        (val, key) = line.split()
+                        redshift_keys[key] = float(val)
 
+        return redshift_keys
 
-def setup_logging(loglevel):
-    """Setup basic logging
+    def fetch_Pee(self, nbins=512):
+        if self.verbose:
+            print("Fetching P_ee since you asked so nicely...")
+            print(f'Reading in files from {self.path_Pee}')
 
-    Args:
-      loglevel (int): minimum loglevel for emitting messages
-    """
-    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
-    logging.basicConfig(
-        level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S"
-    )
+        Pee_list = []
+        for n in self.file_nums:
+            # if self.verbose:
+            #     print(f'Now on file {n}')
 
+            Pee_file = f'{self.path_Pee}/powerspectrum_electrons{n}.dat'
+            P_ee = (0,0)
+            if not os.path.isfile(Pee_file):
+                raise FileNotFoundError(Pee_file)
+            if os.path.isfile(Pee_file):
+                P_ee = np.loadtxt(Pee_file).T
 
-def main(args):
-    """Wrapper allowing :func:`fib` to be called with string arguments in a CLI fashion
+                z = 0
+                if n in self.redshift_keys.keys():
+                    z = self.redshift_keys[n]
 
-    Instead of returning the value from :func:`fib`, it prints the result to the
-    ``stdout`` in a nicely formatted message.
+                Pee_dict = {'file_n': n,
+                                'z': float(z),
+                                'k': P_ee[0],
+                                'P_k': P_ee[1]}
+                Pee_list.append(Pee_dict)
 
-    Args:
-      args (List[str]): command line parameters as list of strings
-          (for example  ``["--verbose", "42"]``).
-    """
-    args = parse_args(args)
-    setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
-    print(f"The {args.n}-th Fibonacci number is {fib(args.n)}")
-    _logger.info("Script ends here")
+        return Pee_list
 
+    def fetch_xion(self, nbins=512):
+        if self.verbose:
+            print("Fetching xion cubes since you asked so nicely...")
 
-def run():
-    """Calls :func:`main` passing the CLI arguments extracted from :obj:`sys.argv`
+        xion_list = []
+        for n in self.file_nums:
+            # if self.verbose:
+            #     print(f'Now on file {n}')
 
-    This function can be used as entry point to create console scripts with setuptools.
-    """
-    main(sys.argv[1:])
+            xion_file = f'{self.path_xion}/xion_256_out{n}.dat'
 
+            # if self.verbose:
+            #     print(f'Now reading in xion box from from {xion_file}')
 
-if __name__ == "__main__":
-    # ^  This is a guard statement that will prevent the following code from
-    #    being executed in the case someone imports this file instead of
-    #    executing it as a script.
-    #    https://docs.python.org/3/library/__main__.html
+            if not os.path.isfile(xion_file):
+                raise FileNotFoundError(xion_file)
+            if os.path.isfile(xion_file):
+                xion = utils.read_cube(xion_file)
 
-    # After installing your project with pip, users can also run your Python
-    # modules as scripts via the ``-m`` flag, as defined in PEP 338::
-    #
-    #     python -m catwoman.skeleton 42
-    #
-    run()
+                z = 0
+                if n in self.redshift_keys.keys():
+                    z = self.redshift_keys[n]
+
+                    xion_dict = {'file_n': n,
+                                'z': float(z),
+                                'cube': xion}
+
+                    xion_list.append(xion_dict)
+
+        return xion_list
+
+    def fetch_dens(self, nbins=512):
+        if self.verbose:
+            print("Fetching density cubes since you asked so nicely...")
+
+        dens_list = []
+        for n in self.file_nums:
+            # if self.verbose:
+            #    print(f'Now on file {n}')
+
+            dens_file = f'{self.path_density}/dens_256_out{n}.dat'
+
+            # if self.verbose:
+            #     print(f'Now reading in density box from from {dens_file}')
+
+            if not os.path.isfile(dens_file):
+                raise FileNotFoundError(dens_file)
+            if os.path.isfile(dens_file):
+                dens_cube = utils.read_cube(dens_file)
+                z = 0
+                if n in self.redshift_keys.keys():
+                    z = self.redshift_keys[n]
+                    cube = utils.convert_density(dens_cube, z)
+
+                    dens_dict = {'file_n': n,
+                                'z': float(z),
+                                'cube': cube}
+                    dens_list.append(dens_dict)
+
+        return dens_list
+
+    def calc_ion_history(self):
+        if self.verbose:
+            print(f"Calculating ionisation history...")
+
+        z = []
+        xe = []
+        for slice in self.xion:
+            # if self.verbose:
+            #    print(f'Now on file {n}')
+            if self.verbose:
+                print(f"Calculating ionisation fraction at redshift {slice['z']}")
+
+            cube = slice['cube']
+            z.append(slice['z'])
+            xe.append(np.mean(cube))
+
+        if self.verbose:
+            print('')
+
+        return np.asarray(z), np.asarray(xe)
+
+    def calc_Pee(self, k=None, n_bins=25, log_bins=True):
+        Pee_list = []
+        for i, den in enumerate(self.density):
+            if self.verbose:
+                print(f"Calculating electron power spectrum at redshift {den['z']}")
+
+            file_n = den['file_n']
+            z = den['z']
+            den_cube = den['cube']
+            xion_cube = 0 # this is to increase the scope of the variable
+            if self.xion[i]['file_n'] == file_n:
+                xion = self.xion[i]
+                xion_cube = xion['cube']
+
+            if self.xion[i]['file_n'] != file_n:
+                raise Exception("The file numbers don't match")
+
+            delta = (den_cube - np.mean(den_cube)) / np.mean(den_cube)
+            ne = xion_cube * (1 + delta)
+            ne_overdensity = (ne - np.mean(ne)) / np.mean(ne)
+
+            pk = 0
+            bins = 0
+            if k is not None:
+                if self.verbose:
+                    print('Using the k values you asked for')
+                pk, bins = get_power(ne_overdensity, 296.0, bins=k)
+
+            if k is None:
+                pk, bins = get_power(ne_overdensity, 296.0,
+                                bins=n_bins,
+                                log_bins=log_bins)
+
+                Pee_dict = {'file_n': file_n,
+                                'z': z,
+                                'k': bins,
+                                'P_k': pk}
+                Pee_list.append(Pee_dict)
+
+        if self.verbose:
+            print('')
+
+        return Pee_list
+
+    def calc_Pbb(self, k=None, n_bins=25, log_bins=True):
+        Pbb_list = []
+        for i, den in enumerate(self.density):
+            if self.verbose:
+                print(f"Calculating matter power spectrum at redshift {den['z']}")
+
+            file_n = den['file_n']
+            z = den['z']
+            den_cube = den['cube']
+
+            delta = (den_cube - np.mean(den_cube)) / np.mean(den_cube)
+            pk = 0
+            bins = 0
+            if k is not None:
+                if self.verbose:
+                    print('Using the k values you asked for')
+                pk, bins = get_power(delta, 296.0, bins=k)
+            if k is None:
+                pk, bins = get_power(delta, 296.0,
+                                    bins=n_bins, log_bins=log_bins)
+            Pbb_dict = {'file_n': file_n,
+                            'z': z,
+                            'k': bins,
+                            'P_k': pk}
+            Pbb_list.append(Pbb_dict)
+
+        if self.verbose:
+            print('')
+
+        return Pbb_list
