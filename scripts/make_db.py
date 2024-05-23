@@ -79,6 +79,7 @@ for sn in sims_num:
                         load_params=True,
                         load_xion=True,
                         load_density=True,
+                        initialise_spectra=True,
                         path_sim=path,
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
