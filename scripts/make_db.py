@@ -84,13 +84,12 @@ for sn in sims_num:
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
 
-            print('sim looks like', sim)
-            #z, xe = sim.calc_ion_history()
-
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
                 print(f'Skipped sim {sn}, added empty sim to list')
                 empties.append(sn)
+            if not sim.xion:
+                print(f'Skipping sim {self.sim_n} initialisation do to missing files')
             else:
                 print('Now onto the science!')
                 snapshots = np.genfromtxt(snapshots_file)
