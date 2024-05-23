@@ -90,14 +90,17 @@ class Cat:
             self.density = self.fetch_dens()
 
         if initialise_spectra:
-            if verbose:
-                print('')
-                print('Initialising spectra. This could take a while...')
-                print('')
-            self.Pbb = self.calc_Pbb()
-            self.Pee = self.calc_Pee()
-            self.k = self.Pee[0]['k']
-            self.z, self.xe = self.calc_ion_history()
+            if self.xion:
+                if verbose:
+                    print('')
+                    print('Initialising spectra. This could take a while...')
+                    print('')
+                self.Pbb = self.calc_Pbb()
+                self.Pee = self.calc_Pee()
+                self.k = self.Pee[0]['k']
+                self.z, self.xe = self.calc_ion_history()
+            if not self.xion:
+                print(f'Skipping sim {sn} initialisation do to missing files')
 
         print('')
         print("Loaded and ready for science!!")
