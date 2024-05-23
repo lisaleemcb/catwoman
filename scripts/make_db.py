@@ -110,8 +110,8 @@ for sn in sims_num:
                 #  "Tension" parameters
                 #################################
 
-                tension = utils.tension(sim)
-                tensions[sn] = tension
+                # tension = utils.tension(sim)
+                # tensions[sn] = tension
 
                 #################################
                 #  Fitting for G22 parameters
