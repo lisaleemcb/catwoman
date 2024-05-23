@@ -3,8 +3,13 @@ import numpy as np
 import pandas as pd
 import catwoman.cat as cat
 
+import ksz.analyse
+import ksz.utils
+import ksz.Pee
+
 from scipy.interpolate import CubicSpline
 from catwoman import utils
+from ksz.parameters import *
 
 path = '/obs/emcbride/sims'
 db_fn = 'Loreli_data.db'
@@ -32,8 +37,13 @@ for dir in os.listdir(path):
     sims_num.append(num)
 
 ion_histories = {}
+tensions = {}
+fits2 = {}
+fits4 = {}
 Pee_spectra = {}
+Pbb_spectra = {}
 sims = []
+
 # for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
 for sn in sims_num:
     if sn in baddies:
@@ -81,13 +91,53 @@ for sn in sims_num:
 
                 skip = utils.find_index(xe)
 
+                #################################
+                #  Ionisation histories
+                #################################
+
                 history = {'z': z[skip:],
                         'xe': xe[skip:]}
                 ion_histories[sn] = history
 
-                Pee = sim.calc_Pee()
-                Pee_spectra[sn] = Pee
+                #################################
+                #  "Tension" parameters
+                #################################
 
+                tension = utils.tension(sim)
+                tensions[sn] = tension
+
+                #################################
+                #  Fitting for G22 parameters
+                #################################
+                k0 = 3
+                kf = 18
+                krange = (k0, kf)
+
+                z0 = np.where(sim.xe > .01)[0][0]
+                zf = np.where(sim.xe > .9)[0][0] + 1
+                zrange = (z0, zf)
+
+                truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
+                priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .75, np.log10(modelparams_Gorce2022['alpha_0']) * 1.25),
+                         (0, modelparams_Gorce2022['kappa'] * 5.0),
+                         (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
+                         (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
+
+                fit2 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, ndim=2)
+                fit4 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, ndim=4, burnin=1000, nsteps=int(1e5))
+
+                fits2[sn] = fit2
+                fits4[sn] = fit4
+
+                #################################
+                #  Spectra
+                #################################
+                Pee_spectra[sn] = sim.Pee
+                Pbb_spectra[sn] = sim.Pbb
+
+                #################################
+                #  Reionisation statistics
+                #################################
                 # interpolation to get z(xe)
                 spl = CubicSpline(xe[skip:], z[skip:])
 
@@ -102,6 +152,12 @@ for sn in sims_num:
                 sim.params['z_end'] = z_end
                 sim.params['A'] = A
                 sim.params['duration'] = duration
+               # sim.params['z_tension'] =
+               #
+                sim.params['alpha_0'] = fit4.fit_params['alpha_0']
+                sim.params['kappa'] = fit4.fit_params['kappa']
+                sim.params['a_xe'] = fit4.fit_params['a_xe']
+                sim.params['k_xe'] = fit4.fit_params['k_xe']
 
                 sims.append(sim.params)
 

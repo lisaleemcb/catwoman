@@ -44,3 +44,10 @@ def find_index(arr):
 
     print('No monotonically increasing part of this function. Are you sure this is correct?')
     return NaN
+
+def tension(sim):
+    tension = np.zeros_like(sim.k, sim.z)
+    for i in range(tension.size):
+        t = sim.Pee[i]['P_k'] /  sim.Pbb[i]['P_k']
+
+    return tension
