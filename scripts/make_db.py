@@ -130,8 +130,8 @@ for sn in sims_num:
                          (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
                          (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
-                fit2 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, Pdd=Pdd, ndim=2)
-                fit4 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, Pdd=Pdd, ndim=4, burnin=1000, nsteps=int(1e5))
+                fit2 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, Pdd=Pdd[z0:zf,k0:kf], ndim=2)
+                fit4 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, Pdd=Pdd[z0:zf,k0:kf], ndim=4, burnin=1000, nsteps=int(1e5))
 
                 fits2[sn] = fit2
                 fits4[sn] = fit4
