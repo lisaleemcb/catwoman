@@ -12,6 +12,11 @@ from catwoman import utils
 from ksz.parameters import *
 
 path = '/obs/emcbride/sims'
+Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
+Pdd = np.load(Pdd_fn)
+
+print('Pdd is loaded with shape', Pdd.shape)
+
 db_fn = 'Loreli_data.db'
 ion_fn = 'ion_histories'
 empties_fn = 'empties'
@@ -125,8 +130,8 @@ for sn in sims_num:
                          (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
                          (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
-                fit2 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, ndim=2)
-                fit4 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, ndim=4, burnin=1000, nsteps=int(1e5))
+                fit2 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, Pdd=Pdd, ndim=2)
+                fit4 = ksz.analyse.Fit((z0, zf), (k0, kf), modelparams_Gorce2022, sim, priors, Pdd=Pdd, ndim=4, burnin=1000, nsteps=int(1e5))
 
                 fits2[sn] = fit2
                 fits4[sn] = fit4
