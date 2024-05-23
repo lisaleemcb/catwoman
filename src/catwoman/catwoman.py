@@ -273,17 +273,18 @@ class Cat:
             if k is not None:
                 if self.verbose:
                     print('Using the k values you asked for')
-                pk, bins = get_power(ne_overdensity, 296.0, bins=k)
+                pk, bins, var = get_power(ne_overdensity, 296.0, bins=k, get_variance=True)
 
             if k is None:
-                pk, bins = get_power(ne_overdensity, 296.0,
+                pk, bins, var = get_power(ne_overdensity, 296.0,
                                 bins=n_bins,
-                                log_bins=log_bins)
+                                log_bins=log_bins, get_variance=True)
 
                 Pee_dict = {'file_n': file_n,
                                 'z': z,
                                 'k': bins,
-                                'P_k': pk}
+                                'P_k': pk,
+                                'var': var}
                 Pee_list.append(Pee_dict)
 
         if self.verbose:
@@ -307,14 +308,15 @@ class Cat:
             if k is not None:
                 if self.verbose:
                     print('Using the k values you asked for')
-                pk, bins = get_power(delta, 296.0, bins=k)
+                pk, bins, var = get_power(delta, 296.0, bins=k, get_variance=True)
             if k is None:
-                pk, bins = get_power(delta, 296.0,
-                                    bins=n_bins, log_bins=log_bins)
+                pk, bins, var = get_power(delta, 296.0,
+                                    bins=n_bins, log_bins=log_bins, get_variance=True)
             Pbb_dict = {'file_n': file_n,
                             'z': z,
                             'k': bins,
-                            'P_k': pk}
+                            'P_k': pk,
+                            'var': var}
             Pbb_list.append(Pbb_dict)
 
         if self.verbose:
