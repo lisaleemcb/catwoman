@@ -99,8 +99,6 @@ class Cat:
                 self.Pee = self.calc_Pee()
                 self.k = self.Pee[0]['k']
                 self.z, self.xe = self.calc_ion_history()
-            if not self.xion:
-                print(f'Skipping sim {self.sim_n} initialisation do to missing files')
 
         print('')
         print("Loaded and ready for science!!")
