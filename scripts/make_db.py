@@ -1,14 +1,13 @@
 import os
 import numpy as np
 import pandas as pd
-import catwoman.cat as cat
 
 import ksz.analyse
 import ksz.utils
 import ksz.Pee
 
 from scipy.interpolate import CubicSpline
-from catwoman import utils
+from catwoman import utils, catwoman
 from ksz.parameters import *
 
 path = '/obs/emcbride/sims'
@@ -75,7 +74,7 @@ for sn in sims_num:
             empties.append(sn)
 
         else:
-            sim = cat.Cat(sn,
+            sim = catwoman.Cat(sn,
                         verbose=True,
                         load_params=True,
                         load_xion=True,
@@ -84,6 +83,7 @@ for sn in sims_num:
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
 
+            print('sim looks like', sim)
             #z, xe = sim.calc_ion_history()
 
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
