@@ -16,6 +16,8 @@ db_fn = 'Loreli_data.db'
 ion_fn = 'ion_histories'
 empties_fn = 'empties'
 Pee_spectra_fn = 'Pee_spectra'
+fits2_fn = '2paramfit'
+fits4_fn = '4paramfit'
 
 # The early redshifts wiggle a bit, so I have to cut out the first few elements to make this a proper function
 xe_start = .02
@@ -176,6 +178,12 @@ np.savez(ion_fn, ion_histories)
 
 print(f'saving electron power spectra to {Pee_spectra_fn}...')
 np.savez(Pee_spectra_fn, Pee_spectra)
+
+print(f'saving 2-parameter fit to {fits2_fn}...')
+np.savez(fits2_fn, fit2)
+
+print(f'saving 4-parameter fit to {fits4_fn}...')
+np.savez(fits4_fn, fit4)
 
 print('example sim is')
 print(sims[5])
