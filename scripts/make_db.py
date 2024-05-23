@@ -89,7 +89,7 @@ for sn in sims_num:
                 print(f'Skipped sim {sn}, added empty sim to list')
                 empties.append(sn)
             if not sim.xion:
-                print(f'Skipping sim {self.sim_n} initialisation do to missing files')
+                print(f'Skipping sim {sn} initialisation do to missing files')
             else:
                 print('Now onto the science!')
                 snapshots = np.genfromtxt(snapshots_file)
