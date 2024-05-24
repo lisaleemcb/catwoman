@@ -54,9 +54,8 @@ sims = []
 for sn in sims_num:
     if sn in baddies:
         print(f'Skipped the baddie {sn}')
-    if sn in empties:
+    elif sn in empties:
         print(f'Skipped empty {sn}')
-
     else:
         print('===================================')
         print(f'Loading sim {sn}')
@@ -89,7 +88,7 @@ for sn in sims_num:
                 print(f'Skipped sim {sn}, added empty sim to list')
                 empties.append(sn)
             if not sim.xion:
-                print(f'Skipping sim {sn} initialisation do to missing files')
+                print(f'Skipping sim {sn} initialisation due to missing files')
             else:
                 print('Now onto the science!')
                 snapshots = np.genfromtxt(snapshots_file)
@@ -129,7 +128,7 @@ for sn in sims_num:
                 Pdd_inter = Pdd_spline(sim.z[z0:zf])
 
                 truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
-                priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .75, np.log10(modelparams_Gorce2022['alpha_0']) * 1.25),
+                priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .25, np.log10(modelparams_Gorce2022['alpha_0']) * 1.75),
                          (0, modelparams_Gorce2022['kappa'] * 5.0),
                          (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
                          (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
