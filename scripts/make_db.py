@@ -29,7 +29,7 @@ xe_mid = 0.5
 xe_end = 0.98
 
 #skip = 5 # this is because sometimes xion goes down, which prevents interpolation
-baddies = ['10446', '10476', '10500', '10452', '10506'] # sims with crazy ion histories
+baddies = ['10446', '10476', '10500', '10452', '10506', '13321'] # sims with crazy ion histories
 empties = [] # doesn't contain a critical file
 
 sims_num = []
