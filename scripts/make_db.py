@@ -124,9 +124,9 @@ for sn in sims_num:
                 zf = np.where(sim.xe > .9)[0][0] + 1
                 zrange = (z0, zf)
 
-                z = np.linspace(5,25, 100)
-                Pdd_spline = CubicSpline(z, Pdd[:,k0:kf])
-                Pdd_extrapolated = Pdd_spline(sim.z[z0:zf])
+                z_inter = np.linspace(5,25, 100)
+                Pdd_spline = CubicSpline(z_inter, Pdd[:,k0:kf])
+                Pdd_inter = Pdd_spline(sim.z[z0:zf])
 
                 truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
                 priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .75, np.log10(modelparams_Gorce2022['alpha_0']) * 1.25),
@@ -134,8 +134,8 @@ for sn in sims_num:
                          (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
                          (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
-                fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_extrapolated, ndim=2)
-                fit4 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_extrapolated, ndim=4, burnin=1000, nsteps=int(1e5))
+                fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=2)
+                fit4 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=4, burnin=1000, nsteps=int(1e5))
 
                 fits2[sn] = fit2
                 fits4[sn] = fit4
