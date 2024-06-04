@@ -30,7 +30,7 @@ xe_end = 0.98
 
 #skip = 5 # this is because sometimes xion goes down, which prevents interpolation
 # sims with crazy ion histories
-baddies = ['10446', '10476', '10500', '10452', '10506', '13321', '13356', '13568', '13465', '13412','10443','13515','13481','13562','13418','10449','13380','13364','10471'] 
+baddies = ['10446', '10476', '10500', '10452', '10506', '13321', '13356', '13568', '1cd ../3465', '13412','10443','13515','13481','13562','13418','10449','13380','13364','10471']
 empties = [] # doesn't contain a critical file
 
 sims_num = []
@@ -72,7 +72,6 @@ for sn in sims_num:
         elif not os.path.isfile(redshift_file):
             print(f'Skipped sim {sn}, added empty sim to list')
             empties.append(sn)
-
         else:
             sim = catwoman.Cat(sn,
                         verbose=True,
@@ -90,89 +89,90 @@ for sn in sims_num:
                 empties.append(sn)
             if not sim.xion:
                 print(f'Skipping sim {sn} initialisation due to missing files')
-            else:
+            elif sim.xion:
                 print('Now onto the science!')
                 snapshots = np.genfromtxt(snapshots_file)
                 z = snapshots[:,0]
                 xe = snapshots[:,1]
 
-                skip = utils.find_index(xe)
+                if max(sim.xe) > .9:
+                    skip = utils.find_index(xe)
 
-                #################################
-                #  Ionisation histories
-                #################################
+                    #################################
+                    #  Ionisation histories
+                    #################################
 
-                history = {'z': z[skip:],
-                        'xe': xe[skip:]}
-                ion_histories[sn] = history
+                    history = {'z': z[skip:],
+                            'xe': xe[skip:]}
+                    ion_histories[sn] = history
 
-                #################################
-                #  "Tension" parameters
-                #################################
+                    #################################
+                    #  "Tension" parameters
+                    #################################
 
-                # tension = utils.tension(sim)
-                # tensions[sn] = tension
+                    # tension = utils.tension(sim)
+                    # tensions[sn] = tension
 
-                #################################
-                #  Fitting for G22 parameters
-                #################################
-                k0 = 3
-                kf = 18
-                krange = (k0, kf)
+                    #################################
+                    #  Fitting for G22 parameters
+                    #################################
+                    k0 = 3
+                    kf = 18
+                    krange = (k0, kf)
 
-                z0 = np.where(sim.xe > .01)[0][0]
-                zf = np.where(sim.xe > .9)[0][0] + 1
-                zrange = (z0, zf)
+                    z0 = np.where(sim.xe > .01)[0][0]
+                    zf = np.where(sim.xe > .9)[0][0] + 1
+                    zrange = (z0, zf)
 
-                z_inter = np.linspace(5,25, 100)
-                Pdd_spline = CubicSpline(z_inter, Pdd[:,k0:kf])
-                Pdd_inter = Pdd_spline(sim.z[z0:zf])
+                    z_inter = np.linspace(5,25, 100)
+                    Pdd_spline = CubicSpline(z_inter, Pdd[:,k0:kf])
+                    Pdd_inter = Pdd_spline(sim.z[z0:zf])
 
-                truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
-                priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .25, np.log10(modelparams_Gorce2022['alpha_0']) * 1.75),
-                         (0, modelparams_Gorce2022['kappa'] * 5.0),
-                         (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
-                         (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
+                    truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
+                    priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .25, np.log10(modelparams_Gorce2022['alpha_0']) * 1.75),
+                            (0, modelparams_Gorce2022['kappa'] * 5.0),
+                            (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
+                            (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
-                fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=2)
-                fit4 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=4, burnin=1000, nsteps=int(1e5))
+                    fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=2)
+                    fit4 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=4, burnin=1000, nsteps=int(1e5))
 
-                fits2[sn] = fit2
-                fits4[sn] = fit4
+                    fits2[sn] = fit2
+                    fits4[sn] = fit4
 
-                #################################
-                #  Spectra
-                #################################
-                Pee_spectra[sn] = sim.Pee
-                Pbb_spectra[sn] = sim.Pbb
+                    #################################
+                    #  Spectra
+                    #################################
+                    Pee_spectra[sn] = sim.Pee
+                    Pbb_spectra[sn] = sim.Pbb
 
-                #################################
-                #  Reionisation statistics
-                #################################
-                # interpolation to get z(xe)
-                spl = CubicSpline(xe[skip:], z[skip:])
+                    #################################
+                    #  Reionisation statistics
+                    #################################
+                    # interpolation to get z(xe)
+                    spl = CubicSpline(xe[skip:], z[skip:])
 
-                z_start = spl(xe_start)
-                z_mid = spl(xe_mid)
-                z_end = spl(xe_end)
-                A = utils.calc_asymmetry(z_start, z_mid, z_end)
-                duration = utils.duration(z_start, z_end)
+                    z_start = spl(xe_start)
+                    z_mid = spl(xe_mid)
+                    z_end = spl(xe_end)
+                    A = utils.calc_asymmetry(z_start, z_mid, z_end)
+                    duration = utils.duration(z_start, z_end)
 
-                sim.params['z_start'] = z_start
-                sim.params['z_mid'] = z_mid
-                sim.params['z_end'] = z_end
-                sim.params['A'] = A
-                sim.params['duration'] = duration
-               # sim.params['z_tension'] =
-               #
-                sim.params['alpha_0'] = fit4.fit_params['alpha_0']
-                sim.params['kappa'] = fit4.fit_params['kappa']
-                sim.params['a_xe'] = fit4.fit_params['a_xe']
-                sim.params['k_xe'] = fit4.fit_params['k_xe']
+                    sim.params['z_start'] = z_start
+                    sim.params['z_mid'] = z_mid
+                    sim.params['z_end'] = z_end
+                    sim.params['A'] = A
+                    sim.params['duration'] = duration
+                # sim.params['z_tension'] =
+                #
+                    sim.params['alpha_0'] = fit4.fit_params['alpha_0']
+                    sim.params['kappa'] = fit4.fit_params['kappa']
+                    sim.params['a_xe'] = fit4.fit_params['a_xe']
+                    sim.params['k_xe'] = fit4.fit_params['k_xe']
 
-                sims.append(sim.params)
+                    sims.append(sim.params)
 
-                print('Summary statistics saved to params dict...')
+                    print('Summary statistics saved to params dict...')
 
 
 print(f'saving database to {db_fn}...')
