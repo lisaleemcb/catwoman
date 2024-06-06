@@ -180,8 +180,8 @@ for sn in sims_num:
                     sim.params['duration'] = duration
                 # sim.params['z_tension'] =
                 #
-                    sim.params['alpha_0'] = fit2.fit_params['alpha_0']
-                    sim.params['kappa'] = fit2.fit_params['kappa']
+                   # sim.params['alpha_0'] = fit2.fit_params['alpha_0']
+                   # sim.params['kappa'] = fit2.fit_params['kappa']
                 #    sim.params['a_xe'] = fit4.fit_params['a_xe']
                 #    sim.params['k_xe'] = fit4.fit_params['k_xe']
 
