@@ -31,7 +31,7 @@ xe_end = 0.98
 
 #skip = 5 # this is because sometimes xion goes down, which prevents interpolation
 # sims with crazy ion histories
-baddies = ['10446', '10476', '10500', '10452', '10506', '13321', '13356', '13568', '1cd ../3465', '13412','10443','13515','13481','13562','13418','10449','13380','13364','10471']
+#baddies = ['10446', '10476', '10500', '10452', '10506', '13321', '13356', '13568', '1cd ../3465', '13412','10443','13515','13481','13562','13418','10449','13380','13364','10471']
 empties = [] # doesn't contain a critical file
 written = []
 
@@ -136,7 +136,20 @@ for sn in sims_num:
                             (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
                             (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
-                    fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=2)
+                    a0 = np.linspace(*priors[0], num=100)
+                    kappa = np.linspace(*priors[1], num=120)
+
+                    lklhd_grid = np.zeros((a0.size, kappa.size))
+                    fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors,
+                                                            Pdd=Pdd_inter, ndim=2, initialise=False)
+
+                    for i, ai in enumerate(a0):
+                        for j, ki in enumerate(kappa):
+                            lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
+                                                                        priors, fit2.obs_errs)
+
+                    np.save(f'lklhd_grid_simu{sn}, lklhd_grid)
+
                    # fit4 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=4, burnin=1000, nsteps=int(1e5))
 
                     fits2[sn] = fit2
