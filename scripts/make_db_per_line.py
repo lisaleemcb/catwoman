@@ -148,7 +148,7 @@ for sn in sims_num:
                             lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
                                                                         priors, fit2.obs_errs)
 
-                    np.save(f'lklhd_grid_simu{sn}, lklhd_grid)
+                    np.save(f'lklhd_grid_simu{sn}', lklhd_grid)
 
                    # fit4 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=4, burnin=1000, nsteps=int(1e5))
 
