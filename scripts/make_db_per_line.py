@@ -21,6 +21,7 @@ db_fn = 'Loreli_data.db'
 ion_fn = 'ion_histories'
 empties_fn = 'empties'
 Pee_spectra_fn = 'Pee_spectra'
+xe_cubes_fn = 'xe_from_cubes'
 fits2_fn = '2paramfit'
 fits4_fn = '4paramfit'
 
@@ -50,6 +51,7 @@ tensions = {}
 fits2 = {}
 fits4 = {}
 Pee_spectra = {}
+xe_cubes = {}
 Pbb_spectra = {}
 sims = []
 
@@ -96,6 +98,9 @@ for sn in sims_num:
                 snapshots = np.genfromtxt(snapshots_file)
                 z = snapshots[:,0]
                 xe = snapshots[:,1]
+
+                xe_cubes[sn] = {'z': z,
+                                'xe': xe}
 
                 if max(sim.xe) > .9:
                     skip = utils.find_index(xe)
@@ -206,12 +211,14 @@ df.to_csv(db_fn)
 print(f'saving empties list to {empties_fn}...')
 np.save(empties_fn, empties)
 
-
 print(f'saving ionisation histories to {ion_fn}...')
 np.savez(ion_fn, ion_histories)
 
 print(f'saving electron power spectra to {Pee_spectra_fn}...')
 np.savez(Pee_spectra_fn, Pee_spectra)
+
+print(f'saving electron power spectra to {xe_cubes_fn}...')
+np.savez(xe_cubes_fn, xe_cubes)
 
 print(f'saving 2-parameter fit to {fits2_fn}...')
 np.savez(fits2_fn, fit2)
