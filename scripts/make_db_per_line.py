@@ -12,12 +12,16 @@ from ksz.parameters import *
 
 path = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
+errs_fn = '/obs/emcbride/kSZ/data/EMMA_frac_errs.npz'
 lklhd_path = '/obs/emcbride/lklhd_files'
 spectra_path = '/obs/emcbride/spectra_files'
 xe_path = '/obs/emcbride/xe_files'
 
 Pdd = np.load(Pdd_fn)
-print('Pdd is loaded with shape', Pdd.shape)
+errs = np.load(errs_fn)
+EMMA_k = errs['k']
+frac_err_EMMA = errs['err']
+err_spline  = CubicSpline(EMMA_k, frac_err_EMMA)
 
 # sims with crazy ion histories
 baddies = ['10446', '10476', '10500', '10452', '10506']
@@ -25,6 +29,9 @@ baddies = ['10446', '10476', '10500', '10452', '10506']
 # load simulations that are already parsed so we can skip
 written = np.load('written.npy')
 written = written.tolist()
+
+print('So far the following simulations have been written out:')
+print(written)
 
 sims_num = []
 for dir in os.listdir(path):
@@ -36,16 +43,14 @@ for dir in os.listdir(path):
 
     sims_num.append(num)
 
+
 for sn in sims_num:
+    print('-----------------------------------------------------------')
     if sn in written:
         print(f'Already parsed sim {sn}')
     elif sn in baddies:
         print(f'Skipped the baddie {sn}')
     else:
-        print('===================================')
-        print(f'Loading sim {sn}')
-        print('===================================')
-
         path_params = '/obs/emcbride/param_files'
         params_file = f'{path_params}/runtime_parameters_simulation_{sn}_reformatted.txt'
         redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
@@ -96,7 +101,8 @@ for sn in sims_num:
                             (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
                     fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors,
-                                                            Pdd=Pdd_inter, ndim=2, initialise=False)
+                                                      frac_err=err_spline(sim.k[k0:kf]),
+                                                      Pdd=Pdd_inter, ndim=2, initialise=False)
 
                     a0 = np.linspace(*priors[0], num=100)
                     kappa = np.linspace(*priors[1], num=120)
@@ -116,7 +122,7 @@ for sn in sims_num:
                     np.savez(xe_file, z=sim.z, xe=sim.xe)
 
                     spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
-                    np.savez(xe_file, Pee=sim.Pee, Pbb=sim.Pbb)
+                    np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb)
 
                     written.append(sn)
                     np.save('written.npy', written)
