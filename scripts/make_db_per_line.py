@@ -12,29 +12,19 @@ from ksz.parameters import *
 
 path = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
-db_path = '/obs/emcbride/db_files'
-Pdd = np.load(Pdd_fn)
+lklhd_path = '/obs/emcbride/lklhd_files'
+spectra_path = '/obs/emcbride/spectra_files'
+xe_path = '/obs/emcbride/xe_files'
 
+Pdd = np.load(Pdd_fn)
 print('Pdd is loaded with shape', Pdd.shape)
 
-db_fn = 'Loreli_data.db'
-ion_fn = 'ion_histories'
-empties_fn = 'empties'
-Pee_spectra_fn = 'Pee_spectra'
-xe_cubes_fn = 'xe_from_cubes'
-fits2_fn = '2paramfit'
-fits4_fn = '4paramfit'
-
-# The early redshifts wiggle a bit, so I have to cut out the first few elements to make this a proper function
-xe_start = .02
-xe_mid = 0.5
-xe_end = 0.98
-
-#skip = 5 # this is because sometimes xion goes down, which prevents interpolation
 # sims with crazy ion histories
-baddies = [] #['10446', '10476', '10500', '10452', '10506', '13321', '13356', '13568', '1cd ../3465', '13412','10443','13515','13481','13562','13418','10449','13380','13364','10471']
-empties = [] # doesn't contain a critical file
-written = []
+baddies = ['10446', '10476', '10500', '10452', '10506']
+
+# load simulations that are already parsed so we can skip
+written = np.load('written.npy')
+written = written.tolist()
 
 sims_num = []
 for dir in os.listdir(path):
@@ -46,21 +36,11 @@ for dir in os.listdir(path):
 
     sims_num.append(num)
 
-ion_histories = {}
-tensions = {}
-fits2 = {}
-fits4 = {}
-Pee_spectra = {}
-xe_cubes = {}
-Pbb_spectra = {}
-sims = []
-
-# for sn in open("/obs/emcbride/catwoman/refs/sim_nums.txt",'r').read().splitlines():
 for sn in sims_num:
-    if sn in baddies:
+    if sn in written:
+        print(f'Already parsed sim {sn}')
+    elif sn in baddies:
         print(f'Skipped the baddie {sn}')
-    elif sn in empties:
-        print(f'Skipped empty {sn}')
     else:
         print('===================================')
         print(f'Loading sim {sn}')
@@ -71,11 +51,9 @@ for sn in sims_num:
         redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
 
         if not os.path.isfile(params_file):
-            print(f'Skipped sim {sn}, added empty sim to list')
-            empties.append(sn)
+            print(f'Skipped sim {sn}')
         elif not os.path.isfile(redshift_file):
-            print(f'Skipped sim {sn}, added empty sim to list')
-            empties.append(sn)
+            print(f'Skipped sim {sn}')
         else:
             sim = catwoman.Cat(sn,
                         verbose=True,
@@ -89,36 +67,12 @@ for sn in sims_num:
 
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
-                print(f'Skipped sim {sn}, added empty sim to list')
-                empties.append(sn)
+                print(f'Skipped sim {sn}')
             if not sim.xion:
                 print(f'Skipping sim {sn} initialisation due to missing files')
             elif sim.xion:
-                print('Now onto the science!')
-                snapshots = np.genfromtxt(snapshots_file)
-                z = snapshots[:,0]
-                xe = snapshots[:,1]
-
-                xe_cubes[sn] = {'z': z,
-                                'xe': xe}
-
                 if max(sim.xe) > .9:
-                    skip = utils.find_index(xe)
-
-                    #################################
-                    #  Ionisation histories
-                    #################################
-
-                    history = {'z': z[skip:],
-                            'xe': xe[skip:]}
-                    ion_histories[sn] = history
-
-                    #################################
-                    #  "Tension" parameters
-                    #################################
-
-                    # tension = utils.tension(sim)
-                    # tensions[sn] = tension
+                    print('Now onto the science!')
 
                     #################################
                     #  Fitting for G22 parameters
@@ -141,92 +95,32 @@ for sn in sims_num:
                             (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
                             (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
-                    a0 = np.linspace(*priors[0], num=100)
-                    kappa = np.linspace(*priors[1], num=120)
-
-                    lklhd_grid = np.zeros((a0.size, kappa.size))
                     fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors,
                                                             Pdd=Pdd_inter, ndim=2, initialise=False)
+
+                    a0 = np.linspace(*priors[0], num=100)
+                    kappa = np.linspace(*priors[1], num=120)
+                    lklhd_grid = np.zeros((a0.size, kappa.size))
 
                     for i, ai in enumerate(a0):
                         for j, ki in enumerate(kappa):
                             lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
                                                                         priors, fit2.obs_errs)
 
-                    np.save(f'lklhd_grid_simu{sn}', lklhd_grid)
-
-                   # fit4 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors, Pdd=Pdd_inter, ndim=4, burnin=1000, nsteps=int(1e5))
-
-                    fits2[sn] = fit2
-                  #  fits4[sn] = fit4
-
-                    #################################
-                    #  Spectra
-                    #################################
-                    Pee_spectra[sn] = sim.Pee
-                    Pbb_spectra[sn] = sim.Pbb
-
-                    #################################
-                    #  Reionisation statistics
-                    #################################
-                    # interpolation to get z(xe)
-                    spl = CubicSpline(xe[skip:], z[skip:])
-
-                    z_start = spl(xe_start)
-                    z_mid = spl(xe_mid)
-                    z_end = spl(xe_end)
-                    A = utils.calc_asymmetry(z_start, z_mid, z_end)
-                    duration = utils.duration(z_start, z_end)
-
-                    sim.params['z_start'] = z_start
-                    sim.params['z_mid'] = z_mid
-                    sim.params['z_end'] = z_end
-                    sim.params['A'] = A
-                    sim.params['duration'] = duration
-                # sim.params['z_tension'] =
-                #
-                   # sim.params['alpha_0'] = fit2.fit_params['alpha_0']
-                   # sim.params['kappa'] = fit2.fit_params['kappa']
-                #    sim.params['a_xe'] = fit4.fit_params['a_xe']
-                #    sim.params['k_xe'] = fit4.fit_params['k_xe']
-
-                    sims.append(sim.params)
-
-                    file_name = f"params_simu{sn}.npz"
 
                     # Combine the directory path and file name to create the full file path using os.path.join
-                    file_path = os.path.join(db_path, file_name)
+                    lklhd_file = os.path.join(lklhd_path, f'lklhd_grid_simu{sn}')
+                    np.save(lklhd_file, lklhd_grid)
 
-                    # Save the dictionary to a NumPy .npz file
-                    np.savez(file_path, sim.params)
+                    xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
+                    np.savez(xe_file, z=sim.z, xe=sim.xe)
 
-                    print('Summary statistics saved to params dict...')
+                    spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
+                    np.savez(xe_file, Pee=sim.Pee, Pbb=sim.Pbb)
 
+                    written.append(sn)
+                    np.save('written.npy', written)
 
+                    print(f'Sim {sn} saved to disk...')
 
-print(f'saving database to {db_fn}...')
-df = pd.DataFrame(sims)
-df.to_csv(db_fn)
-
-print(f'saving empties list to {empties_fn}...')
-np.save(empties_fn, empties)
-
-print(f'saving ionisation histories to {ion_fn}...')
-np.savez(ion_fn, ion_histories)
-
-print(f'saving electron power spectra to {Pee_spectra_fn}...')
-np.savez(Pee_spectra_fn, Pee_spectra)
-
-print(f'saving electron power spectra to {xe_cubes_fn}...')
-np.savez(xe_cubes_fn, xe_cubes)
-
-print(f'saving 2-parameter fit to {fits2_fn}...')
-np.savez(fits2_fn, fit2)
-
-print(f'saving 4-parameter fit to {fits4_fn}...')
-np.savez(fits4_fn, fit4)
-
-print('example sim is')
-print(sims[5])
-
-print(f'done!')
+print(f'We actually ran through all the files!')
