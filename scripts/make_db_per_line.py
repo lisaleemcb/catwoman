@@ -12,7 +12,7 @@ from ksz.parameters import *
 
 path = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
-errs_fn = '/obs/emcbride/kSZ/data/EMMA_frac_errs.npz'
+errs_fn = '/obs/emcbride/kSZ/data/EMMA/EMMA_frac_errs.npz'
 lklhd_path = '/obs/emcbride/lklhd_files'
 spectra_path = '/obs/emcbride/spectra_files'
 xe_path = '/obs/emcbride/xe_files'
