@@ -122,7 +122,7 @@ for sn in sims_num:
                     np.savez(xe_file, z=sim.z, xe=sim.xe)
 
                     spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
-                    np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb)
+                    np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
 
                     written.append(sn)
                     np.save('written.npy', written)

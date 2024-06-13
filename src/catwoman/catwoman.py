@@ -324,3 +324,37 @@ class Cat:
             print('')
 
         return Pbb_list
+
+def calc_Pxx(self, k=None, n_bins=25, log_bins=True):
+    Pxx_list = []
+    for i, xion in enumerate(self.xion):
+        if self.verbose:
+            print(f"Calculating ionisation power spectrum at redshift {xion['z']}")
+
+        file_n = xion['file_n']
+        z = xion['z']
+        xion_cube= xion['cube']
+
+        pk = 0
+        bins = 0
+        if k is not None:
+            if self.verbose:
+                print('Using the k values you asked for')
+            pk, bins, var = get_power(xion_cube, 296.0, bins=k, get_variance=True)
+
+        if k is None:
+            pk, bins, var = get_power(xion_cube, 296.0,
+                            bins=n_bins,
+                            log_bins=log_bins, get_variance=True)
+
+            Pxx_dict = {'file_n': file_n,
+                            'z': z,
+                            'k': bins,
+                            'P_k': pk,
+                            'var': var}
+            Pxx_list.append(Pxx_dict)
+
+    if self.verbose:
+        print('')
+
+    return Pxx_list
