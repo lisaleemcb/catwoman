@@ -101,7 +101,7 @@ for sn in sims_num:
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
 
-            logger.info(f'xion looks like: {sim.xion[0]}')
+            logger.info(f'xion looks like: {sim.xion}')
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
                 err_file = os.path.join(log_dir, f'simu{sn}.failed')
