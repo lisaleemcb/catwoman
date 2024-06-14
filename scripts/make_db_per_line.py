@@ -112,7 +112,7 @@ for sn in sims_num:
                 err_file = os.path.join(log_dir, f'simu{sn}.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
 
-                logger_err..warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
+                logger_err.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
             if not sim.xion:
                 err_file = os.path.join(log_dir, f'simu{sn}.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
