@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from astropy.cosmology import Planck18 as Planck
 
 def read_cube(path, type=np.float64):
@@ -51,3 +52,20 @@ def tension(sim):
         t = sim.Pee[i]['P_k'] /  sim.Pbb[i]['P_k']
 
     return tension
+
+def setup_logger(logger_name, log_file, level=logging.INFO):
+    handler = logging.FileHandler(log_file)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+
+    # Clear existing handlers to avoid duplicate logs
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    logger.addHandler(handler)
+
+    return logger
