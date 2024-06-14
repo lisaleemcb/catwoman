@@ -103,6 +103,7 @@ class Cat:
 
         print('')
         print("Loaded and ready for science!!")
+        print('')
 
     def gen_filenums(self):
         file_nums = []
@@ -129,6 +130,10 @@ class Cat:
             print('Fetching redshifts...')
         # fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
         fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.dat'
+
+        if not os.path.isfile(fn_z):
+            print('No redshift file with the extension .dat...trying .txt...')
+            fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.txt'
 
         redshift_keys = {}
         with open(fn_z) as f:

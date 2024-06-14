@@ -1,4 +1,6 @@
 import os
+from string import printable
+import logger
 import numpy as np
 import pandas as pd
 
@@ -9,6 +11,10 @@ import ksz.Pee
 from scipy.interpolate import CubicSpline
 from catwoman import utils, catwoman
 from ksz.parameters import *
+
+# logs directory
+log_dir = 'logs'
+os.makedirs(log_dir, exist_ok=True)
 
 path = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
@@ -43,22 +49,36 @@ for dir in os.listdir(path):
 
     sims_num.append(num)
 
-
 for sn in sims_num:
     print('-----------------------------------------------------------')
+    print(f'Now on sim {sn}...')
+
+    logger_name = f'logger_{sn}'
+    log_file = os.path.join(log_dir, f'simu{sn}.log')
+    logger = utils.setup_logger(logger_name, log_file)
+
+    logger.info('ON SIMULATION {sn}')
     if sn in written:
-        print(f'Already parsed sim {sn}')
+        logger.info(f'Already parsed sim {sn}')
     elif sn in baddies:
-        print(f'Skipped the baddie {sn}')
+        logger.warning(f'Skipped the baddie {sn}')
     else:
         path_params = '/obs/emcbride/param_files'
         params_file = f'{path_params}/runtime_parameters_simulation_{sn}_reformatted.txt'
         redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
 
+        logger.info(f'params_file={params_file}')
+        logger.info(f'redshift_file={redshift_file}')
+
         if not os.path.isfile(params_file):
-            print(f'Skipped sim {sn}')
+            logger.warning(f'no params file')
+            print('skipping sim {sn}...')
         elif not os.path.isfile(redshift_file):
-            print(f'Skipped sim {sn}')
+            logger.warning(f'no redshift file with the extension .dat. Trying .txt...')
+            redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.txt'
+            if not os.path.isfile(redshift_file):
+                logger.warning(f'no redshift file with the extension .txt')
+                print(f'skipping sim {sn}...')
         else:
             sim = catwoman.Cat(sn,
                         verbose=True,
@@ -72,11 +92,12 @@ for sn in sims_num:
 
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
-                print(f'Skipped sim {sn}')
+                logger.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
             if not sim.xion:
-                print(f'Skipping sim {sn} initialisation due to missing files')
+                logger.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
             elif sim.xion:
-                if max(sim.xe) > .9:
+                if max(sim.xe) >= .9:
+                    print('')
                     print('Now onto the science!')
 
                     #################################
@@ -106,6 +127,9 @@ for sn in sims_num:
 
                     a0 = np.linspace(*priors[0], num=100)
                     kappa = np.linspace(*priors[1], num=120)
+                    a_xe = np.linspace(-1,1, num=120)
+                    k_xe = np.linspace(*priors[1], num=120)
+
                     lklhd_grid = np.zeros((a0.size, kappa.size))
 
                     for i, ai in enumerate(a0):
@@ -127,6 +151,9 @@ for sn in sims_num:
                     written.append(sn)
                     np.save('written.npy', written)
 
+                    logger.info(f'Sim {sn} saved to disk...')
                     print(f'Sim {sn} saved to disk...')
+                    print('')
 
+print('')
 print(f'We actually ran through all the files!')
