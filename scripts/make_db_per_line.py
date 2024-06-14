@@ -71,15 +71,26 @@ for sn in sims_num:
         logger.info(f'redshift_file={redshift_file}')
 
         if not os.path.isfile(params_file):
-            logger.warning(f'no params file')
+            err_file = os.path.join(log_dir, f'simu{sn}.failed')
+            logger_err = utils.setup_logger(logger_name, err_file)
+
+            logger_err.warning(f'no params file')
             print('skipping sim {sn}...')
         elif not os.path.isfile(redshift_file):
-            logger.warning(f'no redshift file with the extension .dat. Trying .txt...')
+            err_file = os.path.join(log_dir, f'simu{sn}.failed')
+            logger_err = utils.setup_logger(logger_name, err_file)
+
+            logger_err.warning(f'no redshift file with the extension .dat. Trying .txt...')
             redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.txt'
             if not os.path.isfile(redshift_file):
-                logger.warning(f'no redshift file with the extension .txt')
+                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                logger_err = utils.setup_logger(logger_name, err_file)
+
+                logger_err.warning(f'no redshift file with the extension .txt')
                 print(f'skipping sim {sn}...')
+
         else:
+            logger.info('passed preliminary checks...loading sim...')
             sim = catwoman.Cat(sn,
                         verbose=True,
                         load_params=True,
@@ -90,17 +101,34 @@ for sn in sims_num:
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
 
+            logger.info(f'xion looks like: {sim.xion[0]}')
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
-                logger.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
+                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                logger_err = utils.setup_logger(logger_name, err_file)
+
+                logger_err.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
             if not sim.density:
-                    logger.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
+                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                logger_err = utils.setup_logger(logger_name, err_file)
+
+                logger_err..warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
             if not sim.xion:
-                logger.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
+                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                logger_err = utils.setup_logger(logger_name, err_file)
+
+                logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
             elif sim.xion:
-                if max(sim.xe) >= .9:
+                if max(sim.xe) < .9:
+                    err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                    logger_err = utils.setup_logger(logger_name, err_file)
+
+                    logger_err.warning('sim does not complete reionisation')
+
+                elif max(sim.xe) >= .9:
                     print('')
                     print('Now onto the science!')
+                    logger.info('sim reaches ionisation fraction 90%...')
 
                     #################################
                     #  Fitting for G22 parameters
@@ -156,6 +184,7 @@ for sn in sims_num:
                     logger.info(f'Sim {sn} saved to disk...')
                     print(f'Sim {sn} saved to disk...')
                     print('')
+
 
 print('')
 print(f'We actually ran through all the files!')
