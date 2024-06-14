@@ -1,6 +1,6 @@
 import os
 from string import printable
-import logger
+import logging
 import numpy as np
 import pandas as pd
 
