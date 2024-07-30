@@ -104,23 +104,23 @@ for sn in sims_num:
             logger.info(f'xion looks like: {sim.xion}')
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
-                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
 
                 logger_err.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
             if not sim.density:
-                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
 
                 logger_err.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
             if not sim.xion:
-                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
 
                 logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
             elif sim.xion:
                 if max(sim.xe) < .9:
-                    err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                    err_file = os.path.join(log_dir, f'simu{sn}.incompletereion.failed')
                     logger_err = utils.setup_logger(logger_name, err_file)
 
                     logger_err.warning('sim does not complete reionisation')
@@ -175,6 +175,7 @@ for sn in sims_num:
                     # xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
                     # np.savez(xe_file, z=sim.z, xe=sim.xe)
 
+                    print('saving files...')
                     spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
                     np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
 
