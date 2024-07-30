@@ -46,6 +46,23 @@ def find_index(arr):
     print('No monotonically increasing part of this function. Are you sure this is correct?')
     return NaN
 
+def unpack_data(spectra, key, zrange, krange):
+    k0 = krange[0]
+    kf = krange[1]
+    ksize = kf - k0
+
+    if isinstance(zrange, int):
+        data = spectra[zrange][key][krange[0]:krange[1]]
+    else:
+        z0 = zrange[0]
+        zf = zrange[1]
+        zsize = zf - z0
+        data = np.zeros((zsize, ksize))
+        for i, zi in enumerate(range(z0, zf)):
+            data[i] = spectra[zi][key][k0:kf]
+
+    return data
+
 def tension(sim):
     tension = np.zeros_like(sim.k, sim.z)
     for i in range(tension.size):

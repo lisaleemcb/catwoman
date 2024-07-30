@@ -341,12 +341,14 @@ class Cat:
             z = xion['z']
             xion_cube= xion['cube']
 
+            xion_overdensity = (xion_cube - np.mean(xion_cube)) / np.mean(xion_cube)
+
             pk = 0
             bins = 0
             if k is not None:
                 if self.verbose:
                     print('Using the k values you asked for')
-                pk, bins, var = get_power(xion_cube, 296.0, bins=k, get_variance=True)
+                pk, bins, var = get_power(xion_overdensity, 296.0, bins=k, get_variance=True)
 
             if k is None:
                 pk, bins, var = get_power(xion_cube, 296.0,
