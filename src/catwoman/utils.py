@@ -17,6 +17,24 @@ def read_cube(path, type=np.float64):
 
     return cube
 
+def read_params(path):
+    sim_params = {}
+
+    # Open the text file
+    with open(path, 'r') as txtfile:
+        # Iterate over each line in the text file
+        for line in txtfile:
+            # Strip leading and trailing whitespace from the line
+            line = line.strip()
+            # Split the line into key and value using tab as the delimiter
+            if '\t' in line:
+                value, key = line.split('\t', 1)  # Split only on the first tab
+                # Add the key-value pair to the dictionary
+                sim_params[key] = value
+               # print(f'{key}: {value}')
+
+    return sim_params
+
 def convert_density(field, z):
     f1 = 2.19e9
     f2 = 2.0e30
