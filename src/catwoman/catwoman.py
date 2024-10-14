@@ -76,8 +76,12 @@ class Cat:
             self.redshift_keys = self.fetch_redshifts()
             self.z = self.redshift_keys.values()
 
+
+        fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
         if load_params:
-            self.params = self.fetch_params()
+            if self.verbose:
+                print("Fetching params since you asked so nicely...")
+            self.params = utils.read_params(f'{self.path_params}/{fn_params}')
 
         if load_Pee:
             print('Loading pre-calc Pee...')
@@ -95,11 +99,19 @@ class Cat:
                     print('')
                     print('Initialising spectra. This could take a while...')
                     print('')
-                self.Pbb = self.calc_Pbb()
-                self.Pee = self.calc_Pee()
-                self.Pxx = self.calc_Pxx()
-                self.k = self.Pee[0]['k']
+                self.Pbb_dict = self.calc_Pbb()
+                self.Pee_dict = self.calc_Pee()
+                self.Pxx_dict = self.calc_Pxx()
+
                 self.z, self.xe = self.calc_ion_history()
+                self.k = self.Pee_dict[0]['k']
+
+                zrange = (0, self.z.size )
+                krange = (0, self.k.size)
+                self.Pee = utils.unpack_data(self.Pee_dict, 'P_k', zrange, krange)
+                self.Pbb = utils.unpack_data(self.Pbb_dict, 'P_k', zrange, krange)
+                self.Pxx = utils.unpack_data(self.Pxx_dict, 'P_k', zrange, krange)
+
 
         print('')
         print("Loaded and ready for science!!")
