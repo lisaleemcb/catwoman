@@ -9,28 +9,23 @@ import ksz.utils
 import ksz.Pee
 
 from scipy.interpolate import CubicSpline
-from catwoman import utils, catwoman
+from catwoman import utils, cat
 from ksz.parameters import *
 
 # logs directory
 log_dir = 'logs'
 os.makedirs(log_dir, exist_ok=True)
 
-path = '/obs/emcbride/sims'
+path_sim = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
 errs_fn = '/obs/emcbride/kSZ/data/EMMA/EMMA_frac_errs.npz'
 lklhd_path = '/obs/emcbride/lklhd_files'
-spectra_path = '/obs/emcbride/spectra_files'
-xe_path = '/obs/emcbride/xe_files'
 
 Pdd = np.load(Pdd_fn)
 errs = np.load(errs_fn)
 EMMA_k = errs['k']
 frac_err_EMMA = errs['err']
 err_spline  = CubicSpline(EMMA_k, frac_err_EMMA)
-
-# sims with crazy ion histories
-#baddies = ['10446', '10476', '10500', '10452', '10506']
 
 # load simulations that are already parsed so we can skip
 written = np.load('written.npy')
@@ -60,12 +55,10 @@ for sn in sims_num:
     logger.info(f'ON SIMULATION {sn}')
     if sn in written:
         logger.info(f'Already parsed sim {sn}')
-    elif sn in baddies:
-        logger.warning(f'Skipped the baddie {sn}')
     else:
         path_params = '/obs/emcbride/param_files'
         params_file = f'{path_params}/runtime_parameters_simulation_{sn}_reformatted.txt'
-        redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
+        redshift_file = f'{path_sim}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
 
         logger.info(f'params_file={params_file}')
         logger.info(f'redshift_file={redshift_file}')
@@ -91,13 +84,14 @@ for sn in sims_num:
 
         else:
             logger.info('passed preliminary checks...loading sim...')
-            sim = catwoman.Cat(sn,
+            sim = cat.Cat(sn,
                         verbose=True,
                         load_params=True,
-                        load_xion=True,
-                        load_density=True,
-                        initialise_spectra=True,
-                        path_sim=path,
+                        load_xion_cubes=True,
+                        load_density_cubes=True,
+                        reinitialise_spectra=True,
+                        save_spectra=True,
+                        path_sim=path_sim,
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
 
@@ -125,10 +119,10 @@ for sn in sims_num:
 
                     logger_err.warning('sim does not complete reionisation')
 
-                elif max(sim.xe) >= .9:
-                    print('')
-                    print('Now onto the science!')
-                    logger.info('sim reaches ionisation fraction 90%...')
+                # elif max(sim.xe) >= .9:
+                #     print('')
+                #     print('Now onto the science!')
+                #     logger.info('sim reaches ionisation fraction 90%...')
 
                     #################################
                     #  Fitting for G22 parameters
@@ -175,16 +169,16 @@ for sn in sims_num:
                     # xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
                     # np.savez(xe_file, z=sim.z, xe=sim.xe)
 
-                    print('saving files...')
-                    spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
-                    np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
+                    # print('saving files...')
+                    # spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
+                    # np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
 
-                    written.append(sn)
-                    np.save('written.npy', written)
+                    # written.append(sn)
+                    # np.save('written.npy', written)
 
-                    logger.info(f'Sim {sn} saved to disk...')
-                    print(f'Sim {sn} saved to disk...')
-                    print('')
+                    # logger.info(f'Sim {sn} saved to disk...')
+                    # print(f'Sim {sn} saved to disk...')
+                    # print('')
 
 
 print('')
