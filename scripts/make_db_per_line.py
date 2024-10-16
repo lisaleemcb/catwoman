@@ -30,7 +30,7 @@ frac_err_EMMA = errs['err']
 err_spline  = CubicSpline(EMMA_k, frac_err_EMMA)
 
 # sims with crazy ion histories
-baddies = ['10446', '10476', '10500', '10452', '10506']
+#baddies = ['10446', '10476', '10500', '10452', '10506']
 
 # load simulations that are already parsed so we can skip
 written = np.load('written.npy')
