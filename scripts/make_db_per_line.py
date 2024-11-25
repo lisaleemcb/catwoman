@@ -9,19 +9,21 @@ import ksz.utils
 import ksz.Pee
 
 from scipy.interpolate import CubicSpline
-from catwoman import utils, catwoman
+from catwoman.cat import Cat
 from ksz.parameters import *
 
 # logs directory
 log_dir = 'logs'
 os.makedirs(log_dir, exist_ok=True)
 
-path = '/obs/emcbride/sims'
+path_sim = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
 errs_fn = '/obs/emcbride/kSZ/data/EMMA/EMMA_frac_errs.npz'
 lklhd_path = '/obs/emcbride/lklhd_files'
-spectra_path = '/obs/emcbride/spectra_files'
+Pee_path = '/obs/emcbride/Pee_files'
 xe_path = '/obs/emcbride/xe_files'
+KSZ_path = '/obs/emcbride/KSZ_files'
+
 
 Pdd = np.load(Pdd_fn)
 errs = np.load(errs_fn)
@@ -29,8 +31,8 @@ EMMA_k = errs['k']
 frac_err_EMMA = errs['err']
 err_spline  = CubicSpline(EMMA_k, frac_err_EMMA)
 
-# sims with crazy ion histories
-baddies = ['10446', '10476', '10500', '10452', '10506']
+KSZ = KSZ_power(verbose=True)
+Pk =  KSZ.run_camb(force=True, return_Pk=True)
 
 # load simulations that are already parsed so we can skip
 written = np.load('written.npy')
@@ -49,6 +51,8 @@ for dir in os.listdir(path):
 
     sims_num.append(num)
 
+bf_params = {}
+
 for sn in sims_num:
     print('-----------------------------------------------------------')
     print(f'Now on sim {sn}...')
@@ -60,12 +64,10 @@ for sn in sims_num:
     logger.info(f'ON SIMULATION {sn}')
     if sn in written:
         logger.info(f'Already parsed sim {sn}')
-    elif sn in baddies:
-        logger.warning(f'Skipped the baddie {sn}')
     else:
         path_params = '/obs/emcbride/param_files'
         params_file = f'{path_params}/runtime_parameters_simulation_{sn}_reformatted.txt'
-        redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
+        redshift_file = f'{path_sim}/simu{sn}/postprocessing/cubes/lum/redshift_list.dat'
 
         logger.info(f'params_file={params_file}')
         logger.info(f'redshift_file={redshift_file}')
@@ -91,36 +93,38 @@ for sn in sims_num:
 
         else:
             logger.info('passed preliminary checks...loading sim...')
-            sim = catwoman.Cat(sn,
+            sim = Cat(sn,
                         verbose=True,
                         load_params=True,
-                        load_xion=True,
-                        load_density=True,
-                        initialise_spectra=True,
-                        path_sim=path,
+                        load_xion_cubes=True,
+                        load_density_cubes=True,
+                        reinitialise_spectra=True,
+                        save_spectra=False,
+                        path_sim=path_sim,
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
 
             logger.info(f'xion looks like: {sim.xion}')
             snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
-                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
 
                 logger_err.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
             if not sim.density:
-                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
 
                 logger_err.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
             if not sim.xion:
-                err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
 
                 logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
+
             elif sim.xion:
                 if max(sim.xe) < .9:
-                    err_file = os.path.join(log_dir, f'simu{sn}.failed')
+                    err_file = os.path.join(log_dir, f'simu{sn}.incompletereion.failed')
                     logger_err = utils.setup_logger(logger_name, err_file)
 
                     logger_err.warning('sim does not complete reionisation')
@@ -166,17 +170,44 @@ for sn in sims_num:
                          for j, ki in enumerate(kappa):
                              lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
                                                                          priors, fit2.obs_errs)
+                    logger.info('sim reaches ionisation fraction 90%, starting analysis...')
 
 
-                    # # Combine the directory path and file name to create the full file path using os.path.join
-                    lklhd_file = os.path.join(lklhd_path, f'lklhd_grid_simu{sn}')
-                    np.save(lklhd_file, lklhd_grid)
+                    print('saving files data...')
 
                     xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
                     np.savez(xe_file, z=sim.z, xe=sim.xe)
 
-                    spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
-                    np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
+                    Pee_file = os.path.join(Pee_path, f'Pee_simu{sn}')
+                    np.savez(Pee_file, k=sim.k, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
+
+                    #################################
+                    #  Fitting for G22 parameters
+                    #################################
+                    zrange = np.where((sim.xe >= .01) & (sim.xe <= .98))[0]
+                    krange = np.where((sim.k >= k_res[0]) & (sim.k <= 2.0))[0]
+
+                    fit = analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
+                                            data=sim.Pee[np.ix_(zrange, krange)],
+                                            initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
+                                            debug=False, verbose=False, nsteps=10)
+                    
+                    # # Combine the directory path and file name to create the full file path using os.path.join
+                    lklhd_file = os.path.join(lklhd_path, f'lklhd_simu{sn}')
+                    np.save(lklhd_file, fit.lklhd)
+
+                    bf_params[sn] = fit.lklhd_params
+
+                    # KSZ simulation
+                    ells = np.linspace(1,12000, 100)
+                    KSZ = KSZ_power(verbose=True, interpolate_xe=True, interpolate_Pee=True,
+                            alpha0=fit.lklhd_params['alpha0'], kappa=fit.lklhd_params['kappa'],
+                            Pee_data=fit.data, xe_data=fit.xe, z_data=fit.z, k_data=fit.k)
+   
+                    KSZ_spectra = KSZ.run_ksz(ells=ells, patchy=True, Dells=True)[:,0]
+
+                    KSZ_file = os.path.join(KSZ_path, f'KSZ_simu{sn}')
+                    np.savez(KSZ_file, ells=ells, KSZ=KSZ_spectra)
 
                     with open(f'fit_simu{sn}.pkl', 'wb') as file:
                         pickle.dump(fit2, file)                   
@@ -188,6 +219,9 @@ for sn in sims_num:
                     print(f'Sim {sn} saved to disk...')
                     print('')
 
+print('Saving all best fit params...')               
+bf_file = os.path.join(lklhd_path, f'bestfit_params')
+np.savez(bf_file, bf=bf_params)
 
 print('')
 print(f'We actually ran through all the files!')
