@@ -64,20 +64,13 @@ def find_index(arr):
     print('No monotonically increasing part of this function. Are you sure this is correct?')
     return NaN
 
-def unpack_data(spectra, key, zrange, krange):
-    k0 = krange[0]
-    kf = krange[1]
-    ksize = kf - k0
+def unpack_data(spectra_dict):
+    data = np.zeros((len(spectra_dict), spectra_dict[0]['P_k'].size))
 
-    if isinstance(zrange, int):
-        data = spectra[zrange][key][krange[0]:krange[1]]
-    else:
-        z0 = zrange[0]
-        zf = zrange[1]
-        zsize = zf - z0
-        data = np.zeros((zsize, ksize))
-        for i, zi in enumerate(range(z0, zf)):
-            data[i] = spectra[zi][key][k0:kf]
+    # if isinstance(zrange, int):
+    #     data = spectra[zrange][key][krange[0]:krange[1]]
+    for i in range(len(spectra_dict)):
+        data[i] = spectra_dict[i]['P_k']
 
     return data
 

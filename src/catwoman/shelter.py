@@ -7,6 +7,7 @@ import pandas as pd
 import powerbox as pb
 from powerbox import get_power
 
+
 import catwoman.utils as utils
 from catwoman import __version__
 
@@ -20,6 +21,8 @@ class Cat:
     def __init__(self,
                 sim_n,
                 verbose=False,
+                pspec_kwargs=None,
+                skip_early=True,
                 load_params=True,
                 load_spectra=True,
                 load_xion_cubes=False,
@@ -38,6 +41,10 @@ class Cat:
         self.path_sim = path_sim
         self.path_Pee = path_Pee
         self.verbose = verbose
+        self.skip_early = skip_early
+
+        self.box_size= 296.0 # Mpc
+        self.k_res = ((2 * np.pi) / self.box_size, (2 * np.pi * 256) / self.box_size / 2)
 
         if self.verbose:
             print(f'==============================')
@@ -88,7 +95,7 @@ class Cat:
                 print(f'density cubes: {self.path_density}')
             print('')
 
-        if (load_xion_cubes or load_density_cubes):
+        if (load_xion_cubes or load_density_cubes or reinitialise_spectra):
             if verbose:
                 print("Fetching reference files...")
             self.file_nums = self.gen_filenums()
@@ -111,6 +118,17 @@ class Cat:
         if reinitialise_spectra:
             self.xion = self.load_xion_cubes()
             self.density = self.load_density_cubes()
+            if pspec_kwargs is None:
+                self.pspec_kwargs = {'bins': np.geomspace(self.k_res[0], self.k_res[1], 26),
+                                    'log_bins': True,
+                                    'get_variance': False,
+                                    'bin_ave': True}
+            else:
+                self.pspec_kwargs = pspec_kwargs
+            
+            if self.verbose:
+                print(f'power spectrum settings:')
+                print(f'{self.pspec_kwargs}')
 
             if self.xion: # this just checks that the data cubes exist
                 if verbose:
@@ -123,12 +141,9 @@ class Cat:
 
                 self.z, self.xe = self.calc_ion_history()
                 self.k = self.Pee_dict[0]['k']
-
-                zrange = (0, self.z.size )
-                krange = (0, self.k.size)
-                self.Pee = utils.unpack_data(self.Pee_dict, 'P_k', zrange, krange)
-                self.Pbb = utils.unpack_data(self.Pbb_dict, 'P_k', zrange, krange)
-                self.Pxx = utils.unpack_data(self.Pxx_dict, 'P_k', zrange, krange)
+                self.Pee = utils.unpack_data(self.Pee_dict)
+                self.Pbb = utils.unpack_data(self.Pbb_dict)
+                self.Pxx = utils.unpack_data(self.Pxx_dict)
 
                 if save_spectra:
                     if verbose:
@@ -137,6 +152,17 @@ class Cat:
                     np.savez(self.Pee_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pee)
                     np.savez(self.Pbb_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pbb)
                     np.savez(self.Pxx_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pxx)
+
+                if self.skip_early:
+                    self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
+                else:
+                    self.skip = 0
+
+                self.z = self.z[self.skip:]
+                self.xe = self.xe[self.skip:]
+                self.Pee = self.Pee[self.skip:]
+                self.Pbb = self.Pbb[self.skip:]
+                self.Pxx =self.Pxx[self.skip:]
 
                 if verbose:
                     print('')
@@ -165,11 +191,16 @@ class Cat:
                 Pxx_file = np.load(self.Pxx_path)
                 
                 self.k = Pee_file['k']
-                self.z = Pee_file['z']
                 self.xe = Pee_file['xe']
-                self.Pee = Pee_file['Pk']
-                self.Pbb = Pbb_file['Pk']
-                self.Pxx = Pxx_file['Pk']
+                if self.skip_early:
+                    self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
+                else:
+                    self.skip = 0
+                self.z = Pee_file['z'][self.skip:]
+                self.xe = self.xe[self.skip:]
+                self.Pee = Pee_file['Pk'][self.skip:]
+                self.Pbb = Pbb_file['Pk'][self.skip:]
+                self.Pxx = Pxx_file['Pk'][self.skip:]
 
                 if verbose:
                     print('')
@@ -195,6 +226,9 @@ class Cat:
         params['sim_n'] = self.sim_n
 
         return params
+    
+    def Delta2(self):
+        return (self.k**3 / (2.0 * np.pi**2)) * self.Pee
 
     def fetch_redshifts(self):
         if self.verbose:
@@ -212,6 +246,8 @@ class Cat:
                         (val, key) = line.split()
                         redshift_keys[key] = float(val)
 
+        if self.verbose:
+            print(f'Simulation redshifts from {np.asarray(list(redshift_keys.values())).min()} to {np.asarray(list(redshift_keys.values())).max()}')
         return redshift_keys
 
     def load_xion_cubes(self, nbins=512):
@@ -296,7 +332,7 @@ class Cat:
 
         return np.asarray(z), np.asarray(xe)
 
-    def calc_Pee(self, k=None, n_bins=25, log_bins=True):
+    def calc_Pee(self, k=None):
         Pee_list = []
         for i, den in enumerate(self.density):
             if self.verbose:
@@ -322,18 +358,16 @@ class Cat:
             if k is not None:
                 if self.verbose:
                     print('Using the k values you asked for')
-                pk, bins, var = get_power(ne_overdensity, 296.0, bins=k, get_variance=True)
+                pk, bins = get_power(ne_overdensity, self.box_size, **self.pspec_kwargs)
 
             if k is None:
-                pk, bins, var = get_power(ne_overdensity, 296.0,
-                                bins=n_bins,
-                                log_bins=log_bins, get_variance=True)
+                pk, bins  = get_power(ne_overdensity, self.box_size,
+                               **self.pspec_kwargs)
 
             Pee_dict = {'file_n': file_n,
                             'z': z,
                             'k': bins,
-                            'P_k': pk,
-                            'var': var}
+                            'P_k': pk}
             Pee_list.append(Pee_dict)
 
         if self.verbose:
@@ -341,7 +375,7 @@ class Cat:
 
         return Pee_list
 
-    def calc_Pbb(self, k=None, n_bins=25, log_bins=True):
+    def calc_Pbb(self, k=None):
         Pbb_list = []
         for i, den in enumerate(self.density):
             if self.verbose:
@@ -357,15 +391,15 @@ class Cat:
             if k is not None:
                 if self.verbose:
                     print('Using the k values you asked for')
-                pk, bins, var = get_power(delta, 296.0, bins=k, get_variance=True)
+                pk, bins = get_power(delta, self.box_size, **self.pspec_kwargs)
+
             if k is None:
-                pk, bins, var = get_power(delta, 296.0,
-                                    bins=n_bins, log_bins=log_bins, get_variance=True)
+                pk, bins  = get_power(delta, self.box_size,
+                               **self.pspec_kwargs)
             Pbb_dict = {'file_n': file_n,
                             'z': z,
                             'k': bins,
-                            'P_k': pk,
-                            'var': var}
+                            'P_k': pk}
             Pbb_list.append(Pbb_dict)
 
         if self.verbose:
@@ -390,18 +424,16 @@ class Cat:
             if k is not None:
                 if self.verbose:
                     print('Using the k values you asked for')
-                pk, bins, var = get_power(xion_overdensity, 296.0, bins=k, get_variance=True)
+                pk, bins = get_power(xion_overdensity, self.box_size, **self.pspec_kwargs)
 
             if k is None:
-                pk, bins, var = get_power(xion_cube, 296.0,
-                                bins=n_bins,
-                                log_bins=log_bins, get_variance=True)
+                pk, bins  = get_power(xion_overdensity, self.box_size,
+                               **self.pspec_kwargs)
 
                 Pxx_dict = {'file_n': file_n,
                                 'z': z,
                                 'k': bins,
-                                'P_k': pk,
-                                'var': var}
+                                'P_k': pk}
                 Pxx_list.append(Pxx_dict)
 
         if self.verbose:
@@ -475,7 +507,7 @@ def main(args):
     """
     args = parse_args(args)
     setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
+    _logger.debug("skiping crazy calculations...")
     print(f"The {args.n}-th Fibonacci number is {fib(args.n)}")
     _logger.info("Script ends here")
 

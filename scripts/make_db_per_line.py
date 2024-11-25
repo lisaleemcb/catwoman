@@ -9,7 +9,7 @@ import ksz.utils
 import ksz.Pee
 
 from scipy.interpolate import CubicSpline
-from catwoman import utils, cat
+from catwoman.cat import Cat
 from ksz.parameters import *
 
 # logs directory
@@ -20,12 +20,19 @@ path_sim = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
 errs_fn = '/obs/emcbride/kSZ/data/EMMA/EMMA_frac_errs.npz'
 lklhd_path = '/obs/emcbride/lklhd_files'
+Pee_path = '/obs/emcbride/Pee_files'
+xe_path = '/obs/emcbride/xe_files'
+KSZ_path = '/obs/emcbride/KSZ_files'
+
 
 Pdd = np.load(Pdd_fn)
 errs = np.load(errs_fn)
 EMMA_k = errs['k']
 frac_err_EMMA = errs['err']
 err_spline  = CubicSpline(EMMA_k, frac_err_EMMA)
+
+KSZ = KSZ_power(verbose=True)
+Pk =  KSZ.run_camb(force=True, return_Pk=True)
 
 # load simulations that are already parsed so we can skip
 written = np.load('written.npy')
@@ -43,6 +50,8 @@ for dir in os.listdir(path):
     sim, num = basename.split('u')
 
     sims_num.append(num)
+
+bf_params = {}
 
 for sn in sims_num:
     print('-----------------------------------------------------------')
@@ -84,13 +93,13 @@ for sn in sims_num:
 
         else:
             logger.info('passed preliminary checks...loading sim...')
-            sim = cat.Cat(sn,
+            sim = Cat(sn,
                         verbose=True,
                         load_params=True,
                         load_xion_cubes=True,
                         load_density_cubes=True,
                         reinitialise_spectra=True,
-                        save_spectra=True,
+                        save_spectra=False,
                         path_sim=path_sim,
                         path_params=path_params,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
@@ -112,6 +121,7 @@ for sn in sims_num:
                 logger_err = utils.setup_logger(logger_name, err_file)
 
                 logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
+
             elif sim.xion:
                 if max(sim.xe) < .9:
                     err_file = os.path.join(log_dir, f'simu{sn}.incompletereion.failed')
@@ -119,67 +129,58 @@ for sn in sims_num:
 
                     logger_err.warning('sim does not complete reionisation')
 
-                # elif max(sim.xe) >= .9:
-                #     print('')
-                #     print('Now onto the science!')
-                #     logger.info('sim reaches ionisation fraction 90%...')
+                elif max(sim.xe) >= .9:
+                    print('')
+                    print('Now onto the science!')
+                    logger.info('sim reaches ionisation fraction 90%, starting analysis...')
+
+
+                    print('saving files data...')
+
+                    xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
+                    np.savez(xe_file, z=sim.z, xe=sim.xe)
+
+                    Pee_file = os.path.join(Pee_path, f'Pee_simu{sn}')
+                    np.savez(Pee_file, k=sim.k, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
 
                     #################################
                     #  Fitting for G22 parameters
                     #################################
-                    # k0 = 3
-                    # kf = 18
-                    # krange = (k0, kf)
+                    zrange = np.where((sim.xe >= .01) & (sim.xe <= .98))[0]
+                    krange = np.where((sim.k >= k_res[0]) & (sim.k <= 2.0))[0]
 
-                    # z0 = np.where(sim.xe > .01)[0][0]
-                    # zf = np.where(sim.xe > .9)[0][0] + 1
-                    # zrange = (z0, zf)
-
-                    # z_inter = np.linspace(5,25, 100)
-                    # Pdd_spline = CubicSpline(z_inter, Pdd[:,k0:kf])
-                    # Pdd_inter = Pdd_spline(sim.z[z0:zf])
-
-                    # truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
-                    # priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .25, np.log10(modelparams_Gorce2022['alpha_0']) * 1.75),
-                    #         (0, modelparams_Gorce2022['kappa'] * 5.0),
-                    #         (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
-                    #         (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
-
-                    # fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors,
-                    #                                   frac_err=err_spline(sim.k[k0:kf]),
-                    #                                   Pdd=Pdd_inter, ndim=2, initialise=False)
-
-                    # a0 = np.linspace(*priors[0], num=100)
-                    # kappa = np.linspace(*priors[1], num=120)
-                    # a_xe = np.linspace(-1,1, num=120)
-                    # k_xe = np.linspace(*priors[1], num=120)
-
-                    # lklhd_grid = np.zeros((a0.size, kappa.size))
-
-                    # for i, ai in enumerate(a0):
-                    #     for j, ki in enumerate(kappa):
-                    #         lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
-                    #                                                     priors, fit2.obs_errs)
-
-
+                    fit = analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
+                                            data=sim.Pee[np.ix_(zrange, krange)],
+                                            initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
+                                            debug=False, verbose=False, nsteps=10)
+                    
                     # # Combine the directory path and file name to create the full file path using os.path.join
-                    # lklhd_file = os.path.join(lklhd_path, f'lklhd_grid_simu{sn}')
-                    # np.save(lklhd_file, lklhd_grid)
+                    lklhd_file = os.path.join(lklhd_path, f'lklhd_simu{sn}')
+                    np.save(lklhd_file, fit.lklhd)
 
-                    # xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
-                    # np.savez(xe_file, z=sim.z, xe=sim.xe)
+                    bf_params[sn] = fit.lklhd_params
 
-                    # print('saving files...')
-                    # spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
-                    # np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
+                    # KSZ simulation
+                    ells = np.linspace(1,12000, 100)
+                    KSZ = KSZ_power(verbose=True, interpolate_xe=True, interpolate_Pee=True,
+                            alpha0=fit.lklhd_params['alpha0'], kappa=fit.lklhd_params['kappa'],
+                            Pee_data=fit.data, xe_data=fit.xe, z_data=fit.z, k_data=fit.k)
+   
+                    KSZ_spectra = KSZ.run_ksz(ells=ells, patchy=True, Dells=True)[:,0]
 
-                    # written.append(sn)
-                    # np.save('written.npy', written)
+                    KSZ_file = os.path.join(KSZ_path, f'KSZ_simu{sn}')
+                    np.savez(KSZ_file, ells=ells, KSZ=KSZ_spectra)
 
-                    # logger.info(f'Sim {sn} saved to disk...')
-                    # print(f'Sim {sn} saved to disk...')
-                    # print('')
+                    written.append(sn)
+                    np.save('written.npy', written)
 
+                    logger.info(f'Sim {sn} saved to disk...')
+                    print(f'Sim {sn} saved to disk...')
+                    print('')
+
+print('Saving all best fit params...')               
+bf_file = os.path.join(lklhd_path, f'bestfit_params')
+np.savez(bf_file, bf=bf_params)
 
 print('')
 print(f'We actually ran through all the files!')
