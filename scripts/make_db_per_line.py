@@ -133,50 +133,53 @@ for sn in sims_num:
                     #################################
                     #  Fitting for G22 parameters
                     #################################
-                    # k0 = 3
-                    # kf = 18
-                    # krange = (k0, kf)
+                    k0 = 3
+                    kf = 18
+                    krange = (k0, kf)
 
-                    # z0 = np.where(sim.xe > .01)[0][0]
-                    # zf = np.where(sim.xe > .9)[0][0] + 1
-                    # zrange = (z0, zf)
+                    z0 = np.where(sim.xe > .01)[0][0]
+                    zf = np.where(sim.xe > .9)[0][0] + 1
+                    zrange = (z0, zf)
 
-                    # z_inter = np.linspace(5,25, 100)
-                    # Pdd_spline = CubicSpline(z_inter, Pdd[:,k0:kf])
-                    # Pdd_inter = Pdd_spline(sim.z[z0:zf])
+                    z_inter = np.linspace(5,25, 100)
+                    Pdd_spline = CubicSpline(z_inter, Pdd[:,k0:kf])
+                    Pdd_inter = Pdd_spline(sim.z[z0:zf])
 
-                    # truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
-                    # priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .25, np.log10(modelparams_Gorce2022['alpha_0']) * 1.75),
-                    #         (0, modelparams_Gorce2022['kappa'] * 5.0),
-                    #         (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
-                    #         (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
+                    truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
+                    priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .25, np.log10(modelparams_Gorce2022['alpha_0']) * 1.75),
+                             (0, modelparams_Gorce2022['kappa'] * 5.0),
+                             (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
+                             (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
 
-                    # fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors,
-                    #                                   frac_err=err_spline(sim.k[k0:kf]),
-                    #                                   Pdd=Pdd_inter, ndim=2, initialise=False)
+                    fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors,
+                                                       frac_err=err_spline(sim.k[k0:kf]),
+                                                       Pdd=Pdd_inter, ndim=2, initialise=False)
 
-                    # a0 = np.linspace(*priors[0], num=100)
-                    # kappa = np.linspace(*priors[1], num=120)
-                    # a_xe = np.linspace(-1,1, num=120)
-                    # k_xe = np.linspace(*priors[1], num=120)
+                    a0 = np.linspace(*priors[0], num=100)
+                    kappa = np.linspace(*priors[1], num=120)
+                    a_xe = np.linspace(-1,1, num=120)
+                    k_xe = np.linspace(*priors[1], num=120)
 
-                    # lklhd_grid = np.zeros((a0.size, kappa.size))
+                    lklhd_grid = np.zeros((a0.size, kappa.size))
 
-                    # for i, ai in enumerate(a0):
-                    #     for j, ki in enumerate(kappa):
-                    #         lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
-                    #                                                     priors, fit2.obs_errs)
+                    for i, ai in enumerate(a0):
+                         for j, ki in enumerate(kappa):
+                             lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
+                                                                         priors, fit2.obs_errs)
 
 
                     # # Combine the directory path and file name to create the full file path using os.path.join
-                    # lklhd_file = os.path.join(lklhd_path, f'lklhd_grid_simu{sn}')
-                    # np.save(lklhd_file, lklhd_grid)
+                    lklhd_file = os.path.join(lklhd_path, f'lklhd_grid_simu{sn}')
+                    np.save(lklhd_file, lklhd_grid)
 
-                    # xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
-                    # np.savez(xe_file, z=sim.z, xe=sim.xe)
+                    xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
+                    np.savez(xe_file, z=sim.z, xe=sim.xe)
 
                     spectra_file = os.path.join(spectra_path, f'spectra_simu{sn}')
                     np.savez(spectra_file, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
+
+                    with open(f'fit_simu{sn}.pkl', 'wb') as file:
+                        pickle.dump(fit2, file)                   
 
                     written.append(sn)
                     np.save('written.npy', written)
