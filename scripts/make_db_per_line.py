@@ -132,49 +132,10 @@ for sn in sims_num:
                 elif max(sim.xe) >= .9:
                     print('')
                     print('Now onto the science!')
-                    logger.info('sim reaches ionisation fraction 90%...')
-
-                    #################################
-                    #  Fitting for G22 parameters
-                    #################################
-                    k0 = 3
-                    kf = 18
-                    krange = (k0, kf)
-
-                    z0 = np.where(sim.xe > .01)[0][0]
-                    zf = np.where(sim.xe > .9)[0][0] + 1
-                    zrange = (z0, zf)
-
-                    z_inter = np.linspace(5,25, 100)
-                    Pdd_spline = CubicSpline(z_inter, Pdd[:,k0:kf])
-                    Pdd_inter = Pdd_spline(sim.z[z0:zf])
-
-                    truths = [np.log10(modelparams_Gorce2022['alpha_0']), modelparams_Gorce2022['kappa']]
-                    priors =[(np.log10(modelparams_Gorce2022['alpha_0']) * .25, np.log10(modelparams_Gorce2022['alpha_0']) * 1.75),
-                             (0, modelparams_Gorce2022['kappa'] * 5.0),
-                             (modelparams_Gorce2022['k_f'] * .25, modelparams_Gorce2022['k_f'] * 5.0),
-                             (modelparams_Gorce2022['g'] * .25, modelparams_Gorce2022['g'] * 5.0)]
-
-                    fit2 = ksz.analyse.Fit(zrange, krange, modelparams_Gorce2022, sim, priors,
-                                                       frac_err=err_spline(sim.k[k0:kf]),
-                                                       Pdd=Pdd_inter, ndim=2, initialise=False)
-
-                    a0 = np.linspace(*priors[0], num=100)
-                    kappa = np.linspace(*priors[1], num=120)
-                    a_xe = np.linspace(-1,1, num=120)
-                    k_xe = np.linspace(*priors[1], num=120)
-
-                    lklhd_grid = np.zeros((a0.size, kappa.size))
-
-                    for i, ai in enumerate(a0):
-                         for j, ki in enumerate(kappa):
-                             lklhd_grid[i,j] = ksz.analyse.log_like((ai, ki), fit2.data, fit2.model_func,
-                                                                         priors, fit2.obs_errs)
                     logger.info('sim reaches ionisation fraction 90%, starting analysis...')
 
 
                     print('saving files data...')
-
                     xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
                     np.savez(xe_file, z=sim.z, xe=sim.xe)
 
@@ -209,8 +170,6 @@ for sn in sims_num:
                     KSZ_file = os.path.join(KSZ_path, f'KSZ_simu{sn}')
                     np.savez(KSZ_file, ells=ells, KSZ=KSZ_spectra)
 
-                    with open(f'fit_simu{sn}.pkl', 'wb') as file:
-                        pickle.dump(fit2, file)                   
 
                     written.append(sn)
                     np.save('written.npy', written)
