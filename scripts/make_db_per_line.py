@@ -27,8 +27,6 @@ xe_path = '/obs/emcbride/xe_files'
 KSZ_path = '/obs/emcbride/KSZ_files'
 
 Pdd = np.load(Pdd_fn)
-=======
-Pdd = np.load(Pdd_fn)
 def Pk(k, z, ref=Pdd):
     z = z
     Pdd_shape = (k * z).shape
