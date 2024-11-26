@@ -8,7 +8,7 @@ import ksz.analyse
 import ksz.utils
 import ksz.Pee
 
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicSpline, RectBivariateSpline, RegularGridInterpolator
 from catwoman.shelter import Cat
 from ksz.parameters import *
 #from ksz_model import *
@@ -19,7 +19,7 @@ log_dir = 'logs'
 os.makedirs(log_dir, exist_ok=True)
 
 path_sim = '/obs/emcbride/sims'
-Pdd_fn = '/obs/emcbride/kSZ/data/Pdd.npy'
+Pdd_fn = '/obs/emcbride/kSZ/data/Pk.npz'
 errs_fn = '/obs/emcbride/kSZ/data/EMMA/EMMA_frac_errs.npz'
 lklhd_path = '/obs/emcbride/lklhd_files'
 Pee_path = '/obs/emcbride/Pee_files'
@@ -28,13 +28,31 @@ KSZ_path = '/obs/emcbride/KSZ_files'
 
 
 Pdd = np.load(Pdd_fn)
+def Pk(k, z, ref=Pdd):
+    z = z
+    Pdd_shape = (k * z).shape
+    #Pdd_interp = np.zeros(Pdd_shape)
+    fit_points = [Pdd['z'], Pdd['k']]
+    values = np.log10(Pdd['Pk'])
+
+    interp = RegularGridInterpolator(fit_points, values, bounds_error=False, fill_value=np.log10(0.0))
+    broadcasted_z = np.broadcast_to(z, Pdd_shape)
+    broadcasted_k = np.broadcast_to(k, Pdd_shape)
+
+    interp_params = np.stack([broadcasted_z.flatten(), broadcasted_k.flatten()], axis=1)
+    Pdd_interp = 10**interp(interp_params).reshape(Pdd_shape)
+
+    return Pdd_interp
+
+Pdd_spline = RectBivariateSpline(Pdd['z'], Pdd['k'], Pdd['Pk'])
+
 errs = np.load(errs_fn)
 EMMA_k = errs['k']
 frac_err_EMMA = errs['err']
 err_spline  = CubicSpline(EMMA_k, frac_err_EMMA)
 
-KSZ = KSZ_power(verbose=True)
-Pk =  KSZ.run_camb(force=True, return_Pk=True)
+# KSZ = KSZ_power(verbose=True)
+# Pk =  KSZ.run_camb(force=True, return_Pk=True)
 
 # load simulations that are already parsed so we can skip
 written = np.load('written.npy')
@@ -152,7 +170,7 @@ for sn in sims_num:
 
                     fit = analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
                                             data=sim.Pee[np.ix_(zrange, krange)],
-                                            initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
+                                            initialise=True, Pdd=(sim.k[krange], sim.z[zrange, None]),
                                             debug=False, verbose=False, nsteps=10)
                     
                     # # Combine the directory path and file name to create the full file path using os.path.join
@@ -171,7 +189,6 @@ for sn in sims_num:
 
    #                 KSZ_file = os.path.join(KSZ_path, f'KSZ_simu{sn}')
    #                 np.savez(KSZ_file, ells=ells, KSZ=KSZ_spectra)
-
 
                     written.append(sn)
                     np.save('written.npy', written)
