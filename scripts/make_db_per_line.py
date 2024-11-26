@@ -28,9 +28,9 @@ KSZ_path = '/obs/emcbride/KSZ_files'
 
 #Pdd = np.load(Pdd_fn)
 
-k_ref = np.load('/obs/emcbride/catwoman/ref/Pdd/k.npy')
-z_ref = np.load('/obs/emcbride/catwoman/ref/Pdd/z.npy')
-Pk_ref = np.load('/obs/emcbride/catwoman/ref/Pdd/Pk.npy')
+k_ref = np.load('/obs/emcbride/catwoman/refs/Pdd/k.npy')
+z_ref = np.load('/obs/emcbride/catwoman/refs/Pdd/z.npy')
+Pk_ref = np.load('/obs/emcbride/catwoman/refs/Pdd/Pk.npy')
 
 Pdd = {'z': z_ref,
        'k': k_ref,
