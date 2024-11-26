@@ -26,7 +26,16 @@ Pee_path = '/obs/emcbride/Pee_files'
 xe_path = '/obs/emcbride/xe_files'
 KSZ_path = '/obs/emcbride/KSZ_files'
 
-Pdd = np.load(Pdd_fn)
+#Pdd = np.load(Pdd_fn)
+
+k_ref = np.load('/obs/emcbride/catwoman/ref/Pdd/k.npy')
+z_ref = np.load('/obs/emcbride/catwoman/ref/Pdd/z.npy')
+Pk_ref = np.load('/obs/emcbride/catwoman/ref/Pdd/Pk.npy')
+
+Pdd = {'z': z_ref,
+       'k': k_ref,
+       'Pk': Pk_ref}
+
 def Pk(k, z, ref=Pdd):
     z = z
     Pdd_shape = (k * z).shape
@@ -59,8 +68,8 @@ print('So far the following simulations have been written out:')
 print(written)
 
 sims_num = []
-for dir in os.listdir(path):
-    print(f'Now parsing simulation directories in {path}')
+for dir in os.listdir(path_sim):
+    print(f'Now parsing simulation directories in {path_sim}')
     print(f'On sim {dir}')
 
     basename, extension = os.path.splitext(dir)
