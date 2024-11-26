@@ -9,7 +9,7 @@ import ksz.utils
 import ksz.Pee
 
 from scipy.interpolate import CubicSpline
-from catwoman.cat import Cat
+from catwoman.shelter import Cat
 from ksz.parameters import *
 
 # logs directory
