@@ -26,7 +26,6 @@ Pee_path = '/obs/emcbride/Pee_files'
 xe_path = '/obs/emcbride/xe_files'
 KSZ_path = '/obs/emcbride/KSZ_files'
 
-
 Pdd = np.load(Pdd_fn)
 def Pk(k, z, ref=Pdd):
     z = z
