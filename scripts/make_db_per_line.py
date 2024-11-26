@@ -7,6 +7,7 @@ import pandas as pd
 import ksz.analyse
 import ksz.utils
 import ksz.Pee
+import catwoman.utils
 
 from scipy.interpolate import CubicSpline, RectBivariateSpline, RegularGridInterpolator
 from catwoman.shelter import Cat
