@@ -11,6 +11,8 @@ import ksz.Pee
 from scipy.interpolate import CubicSpline
 from catwoman.shelter import Cat
 from ksz.parameters import *
+#from ksz_model import *
+#from parameters import *
 
 # logs directory
 log_dir = 'logs'
@@ -160,15 +162,15 @@ for sn in sims_num:
                     bf_params[sn] = fit.lklhd_params
 
                     # KSZ simulation
-                    ells = np.linspace(1,12000, 100)
-                    KSZ = KSZ_power(verbose=True, interpolate_xe=True, interpolate_Pee=True,
-                            alpha0=fit.lklhd_params['alpha0'], kappa=fit.lklhd_params['kappa'],
-                            Pee_data=fit.data, xe_data=fit.xe, z_data=fit.z, k_data=fit.k)
+ #                   ells = np.linspace(1,12000, 100)
+ #                   KSZ = KSZ_power(verbose=True, interpolate_xe=True, interpolate_Pee=True,
+ #                           alpha0=fit.lklhd_params['alpha0'], kappa=fit.lklhd_params['kappa'],
+ #                           Pee_data=fit.data, xe_data=fit.xe, z_data=fit.z, k_data=fit.k)
    
-                    KSZ_spectra = KSZ.run_ksz(ells=ells, patchy=True, Dells=True)[:,0]
+  #                  KSZ_spectra = KSZ.run_ksz(ells=ells, patchy=True, Dells=True)[:,0]
 
-                    KSZ_file = os.path.join(KSZ_path, f'KSZ_simu{sn}')
-                    np.savez(KSZ_file, ells=ells, KSZ=KSZ_spectra)
+   #                 KSZ_file = os.path.join(KSZ_path, f'KSZ_simu{sn}')
+   #                 np.savez(KSZ_file, ells=ells, KSZ=KSZ_spectra)
 
 
                     written.append(sn)
