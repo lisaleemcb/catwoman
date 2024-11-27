@@ -225,6 +225,10 @@ for sn in sims_num:
                     np.save(lklhd_file, fit.lklhd)
 
                     bf_params[sn] = fit.lklhd_params
+                    bf_file = os.path.join(lklhd_path, f'bestfit_params_simu{sn}')
+
+                    print('Saving best fit params...')   
+                    np.savez(bf_file, bf=bf_params)
 
                     # KSZ simulation
  #                   ells = np.linspace(1,12000, 100)
@@ -243,10 +247,8 @@ for sn in sims_num:
                     logger.info(f'Sim {sn} saved to disk...')
                     print(f'Sim {sn} saved to disk...')
                     print('')
+            
 
-print('Saving all best fit params...')               
-bf_file = os.path.join(lklhd_path, f'bestfit_params')
-np.savez(bf_file, bf=bf_params)
 
 print('')
 print(f'We actually ran through all the files!')
