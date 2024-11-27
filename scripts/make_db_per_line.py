@@ -165,12 +165,12 @@ for sn in sims_num:
                     logger.info('sim reaches ionisation fraction 90%, starting analysis...')
 
 
-                    print('saving files data...')
-                    xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
-                    np.savez(xe_file, z=sim.z, xe=sim.xe)
+                    # print('saving files data...')
+                    # xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
+                    # np.savez(xe_file, z=sim.z, xe=sim.xe)
 
-                    Pee_file = os.path.join(Pee_path, f'Pee_simu{sn}')
-                    np.savez(Pee_file, k=sim.k, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
+                    # Pee_file = os.path.join(Pee_path, f'Pee_simu{sn}')
+                    # np.savez(Pee_file, k=sim.k, Pee=sim.Pee, Pbb=sim.Pbb, Pxx=sim.Pxx)
 
                     #################################
                     #  Fitting for G22 parameters
