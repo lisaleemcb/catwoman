@@ -106,7 +106,7 @@ class Cat:
 
 
         fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
-        if load_params:
+        if (load_params or reinitialise_spectra):
             if self.verbose:
                 print("Fetching params since you asked so nicely...")
             self.params = utils.read_params(f'{self.path_params}/{fn_params}')
