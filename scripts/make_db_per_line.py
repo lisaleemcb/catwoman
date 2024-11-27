@@ -19,7 +19,7 @@ from ksz.parameters import *
 log_dir = 'logs'
 os.makedirs(log_dir, exist_ok=True)
 
-path_spectra = 'obs/emcbride/spectra/Pee'
+path_spectra = '/obs/emcbride/spectra/Pee'
 path_sim = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pk.npz'
 errs_fn = '/obs/emcbride/kSZ/data/EMMA/EMMA_frac_errs.npz'
@@ -70,8 +70,8 @@ print('So far the following simulations have been written out:')
 print(written)
 
 sims_num = []
+print(f'Now parsing simulation directories in {path_sim}')
 for dir in os.listdir(path_sim):
-    print(f'Now parsing simulation directories in {path_sim}')
     print(f'On sim {dir}')
 
     basename, extension = os.path.splitext(dir)
