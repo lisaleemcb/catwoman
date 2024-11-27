@@ -129,7 +129,7 @@ class Cat:
                 self.pspec_kwargs = pspec_kwargs
             
             if self.verbose:
-                print(f'Simulation runs from z={max(list(self.z.values()))} to z={min(list(self.z.values()))}')
+                print(f'Simulation runs from z={max(list(self.z))} to z={min(list(self.z))}')
                 print(f'Power spectrum settings:')
                 print(f'{self.pspec_kwargs}')
 
