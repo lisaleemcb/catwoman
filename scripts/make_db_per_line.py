@@ -119,6 +119,7 @@ for sn in sims_num:
             logger_err.warning(f'no params file')
             print('skipping sim {sn}...')
             skipped.append(sn)
+            np.save('skipped.npy', skipped)
 
             continue 
 
@@ -135,6 +136,7 @@ for sn in sims_num:
                 logger_err.warning(f'no redshift file with the extension .txt')
                 print(f'skipping sim {sn}...')
                 skipped.append(sn)
+                np.save('skipped.npy', skipped)
 
                 continue
 
@@ -158,7 +160,7 @@ for sn in sims_num:
             if not os.path.isfile(snapshots_file):
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
-                skipped.append(sn)
+                np.save('skipped.npy', skipped)
                 logger_err.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
 
                 continue
@@ -166,7 +168,7 @@ for sn in sims_num:
             if not sim.density:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
-                skipped.append(sn)
+                np.save('skipped.npy', skipped)
                 logger_err.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
 
                 continue
@@ -174,7 +176,7 @@ for sn in sims_num:
             if not sim.xion:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
-                skipped.append(sn)
+                np.save('skipped.npy', skipped)
                 logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
 
                 continue
@@ -185,6 +187,7 @@ for sn in sims_num:
                     err_file = os.path.join(log_dir, f'simu{sn}.incompletereion.failed')
                     logger_err = utils.setup_logger(logger_name, err_file)
                     skipped.append(sn)
+                    np.save('skipped.npy', skipped)
                     logger_err.warning('sim does not complete reionisation')
 
                     continue
