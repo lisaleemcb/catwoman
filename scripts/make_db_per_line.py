@@ -66,7 +66,9 @@ err_spline  = CubicSpline(EMMA_k, frac_err_EMMA)
 # load simulations that are already parsed so we can skip
 skipped = np.load('skipped.npy')
 written = np.load('written.npy')
+
 written = written.tolist()
+skipped = skipped.tolist()
 
 print('So far the following simulations have been written out:')
 print(written)
