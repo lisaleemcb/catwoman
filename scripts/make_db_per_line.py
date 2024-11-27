@@ -216,7 +216,7 @@ for sn in sims_num:
                     obs_errs = err_spline(sim.k[krange]) * data
 
                     fit = ksz.analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
-                                            data=data,
+                                            data=data, load_errs=False,
                                             initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
                                             debug=False, verbose=False, nsteps=10, obs_errs=obs_errs)
                     
