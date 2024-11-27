@@ -111,15 +111,13 @@ class Cat:
                 print("Fetching params...")
             self.params = utils.read_params(f'{self.path_params}/{fn_params}')
 
-        if load_xion_cubes:
+        if (load_xion_cubes or reinitialise_spectra):
             self.xion = self.load_xion_cubes()
 
-        if load_density_cubes:
+        if (load_density_cubes or reinitialise_spectra):
             self.density = self.load_density_cubes()
 
         if reinitialise_spectra:
-            self.xion = self.load_xion_cubes()
-            self.density = self.load_density_cubes()
             if pspec_kwargs is None:
                 self.pspec_kwargs = {'bins': np.geomspace(self.k_res[0], self.k_res[1], 21),
                                     'log_bins': True,
@@ -260,7 +258,7 @@ class Cat:
 
     def load_xion_cubes(self, nbins=512):
         if self.verbose:
-            print("Fetching xion cubes since you asked so nicely...")
+            print("Fetching xion cubes...")
 
         xion_list = []
         for n in self.file_nums:
@@ -291,7 +289,7 @@ class Cat:
 
     def load_density_cubes(self, nbins=512):
         if self.verbose:
-            print("Fetching density cubes since you asked so nicely...")
+            print("Fetching density cubes...")
 
         density_list = []
         for n in self.file_nums:
