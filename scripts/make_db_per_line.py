@@ -178,7 +178,7 @@ for sn in sims_num:
                     zrange = np.where((sim.xe >= .01) & (sim.xe <= .98))[0]
                     krange = np.where((sim.k >= k_res[0]) & (sim.k <= 2.0))[0]
 
-                    fit = analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
+                    fit = ksz.analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
                                             data=sim.Pee[np.ix_(zrange, krange)],
                                             initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
                                             debug=False, verbose=False, nsteps=10)

@@ -88,13 +88,12 @@ class Cat:
 
         if verbose:
             print('You have told me that data lives in the following places:')
-            print('')
             if load_params:
-                print(f'params: {self.path_params}')
+                print(f'\tparams: {self.path_params}')
             if load_xion_cubes:
-                print(f'ionisation cubes: {self.path_xion}')
+                print(f'\tionisation cubes: {self.path_xion}')
             if load_density_cubes:
-                print(f'density cubes: {self.path_density}')
+                print(f'\tdensity cubes: {self.path_density}')
             print('')
 
         if (load_xion_cubes or load_density_cubes or reinitialise_spectra):
@@ -127,9 +126,10 @@ class Cat:
                 self.pspec_kwargs = pspec_kwargs
             
             if self.verbose:
+                print('')
                 print(f'Simulation runs from z={max(list(self.z))} to z={min(list(self.z))}')
                 print(f'Power spectrum settings:')
-                print(f'{self.pspec_kwargs}')
+                print(f'\t{self.pspec_kwargs}')
 
             if self.xion: # this just checks that the data cubes exist
                 if verbose:
@@ -183,13 +183,13 @@ class Cat:
                     print('Loading precalculated spectra. If you would like fresh spectra, rerun with reinitialise_spectra=True')
 
                 if not os.path.exists(self.Pee_spectra_path):
-                        raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
+                        raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.\nRerun with reinitialise_spectra=True and save_spectra=True.")
                 
                 if not os.path.exists(self.Pbb_spectra_path):
-                        raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
+                        raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
                 
                 if not os.path.exists(self.Pxx_spectra_path):
-                        raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
+                        raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
                 
                 Pee_file = np.load(self.Pee_spectra_path)
                 if not just_Pee:
