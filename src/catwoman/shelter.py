@@ -29,6 +29,7 @@ class Cat:
                 load_density_cubes=False,
                 reinitialise_spectra=False,
                 save_spectra=False,
+                just_Pee=True,
                 path_sim='/Users/emcbride/kSZ/data/LoReLi',
                 path_params = None,
                 path_spectra=None,
@@ -66,8 +67,9 @@ class Cat:
                 os.makedirs(self.path_spectra)
         
         self.Pee_path = f'{self.path_spectra}/simu{self.sim_n}_Pee_spectra.npz'
-        self.Pbb_path = f'{self.path_spectra}/simu{self.sim_n}_Pbb_spectra.npz'
-        self.Pxx_path = f'{self.path_spectra}/simu{self.sim_n}_Pxx_spectra.npz'
+        if not just_Pee:
+            self.Pbb_path = f'{self.path_spectra}/simu{self.sim_n}_Pbb_spectra.npz'
+            self.Pxx_path = f'{self.path_spectra}/simu{self.sim_n}_Pxx_spectra.npz'
 
         if path_Pee is not None:
             self.path_Pee = path_Pee
@@ -119,7 +121,7 @@ class Cat:
             self.xion = self.load_xion_cubes()
             self.density = self.load_density_cubes()
             if pspec_kwargs is None:
-                self.pspec_kwargs = {'bins': np.geomspace(self.k_res[0], self.k_res[1], 26),
+                self.pspec_kwargs = {'bins': np.geomspace(self.k_res[0], self.k_res[1], 21),
                                     'log_bins': True,
                                     'get_variance': False,
                                     'bin_ave': True}
@@ -136,22 +138,25 @@ class Cat:
                     print('Initialising spectra. This could take a while...')
                     print('')
                 self.Pbb_dict = self.calc_Pbb()
-                self.Pee_dict = self.calc_Pee()
-                self.Pxx_dict = self.calc_Pxx()
+                if not just_Pee:
+                    self.Pee_dict = self.calc_Pee()
+                    self.Pxx_dict = self.calc_Pxx()
 
                 self.z, self.xe = self.calc_ion_history()
                 self.k = self.Pee_dict[0]['k']
                 self.Pee = utils.unpack_data(self.Pee_dict)
-                self.Pbb = utils.unpack_data(self.Pbb_dict)
-                self.Pxx = utils.unpack_data(self.Pxx_dict)
+                if not just_Pee:
+                    self.Pbb = utils.unpack_data(self.Pbb_dict)
+                    self.Pxx = utils.unpack_data(self.Pxx_dict)
 
                 if save_spectra:
                     if verbose:
                         print('Saving power spectra...')
 
                     np.savez(self.Pee_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pee)
-                    np.savez(self.Pbb_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pbb)
-                    np.savez(self.Pxx_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pxx)
+                    if not just_Pee:
+                        np.savez(self.Pbb_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pbb)
+                        np.savez(self.Pxx_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pxx)
 
                 if self.skip_early:
                     self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
@@ -161,8 +166,9 @@ class Cat:
                 self.z = self.z[self.skip:]
                 self.xe = self.xe[self.skip:]
                 self.Pee = self.Pee[self.skip:]
-                self.Pbb = self.Pbb[self.skip:]
-                self.Pxx =self.Pxx[self.skip:]
+                if not just_Pee:
+                    self.Pbb = self.Pbb[self.skip:]
+                    self.Pxx =self.Pxx[self.skip:]
 
                 if verbose:
                     print('')
@@ -187,8 +193,9 @@ class Cat:
                         raise FileNotFoundError(f"The file '{self.Pxx_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
                 
                 Pee_file = np.load(self.Pee_path)
-                Pbb_file = np.load(self.Pbb_path)
-                Pxx_file = np.load(self.Pxx_path)
+                if not just_Pee:
+                    Pbb_file = np.load(self.Pbb_path)
+                    Pxx_file = np.load(self.Pxx_path)
                 
                 self.k = Pee_file['k']
                 self.xe = Pee_file['xe']
@@ -199,8 +206,9 @@ class Cat:
                 self.z = Pee_file['z'][self.skip:]
                 self.xe = self.xe[self.skip:]
                 self.Pee = Pee_file['Pk'][self.skip:]
-                self.Pbb = Pbb_file['Pk'][self.skip:]
-                self.Pxx = Pxx_file['Pk'][self.skip:]
+                if not just_Pee:
+                    self.Pbb = Pbb_file['Pk'][self.skip:]
+                    self.Pxx = Pxx_file['Pk'][self.skip:]
 
                 if verbose:
                     print('')

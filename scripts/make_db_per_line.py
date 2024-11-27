@@ -19,6 +19,7 @@ from ksz.parameters import *
 log_dir = 'logs'
 os.makedirs(log_dir, exist_ok=True)
 
+path_spectra = 'obs/emcbride/spectra/Pee'
 path_sim = '/obs/emcbride/sims'
 Pdd_fn = '/obs/emcbride/kSZ/data/Pk.npz'
 errs_fn = '/obs/emcbride/kSZ/data/EMMA/EMMA_frac_errs.npz'
@@ -110,7 +111,7 @@ for sn in sims_num:
             logger_err = utils.setup_logger(logger_name, err_file)
 
             logger_err.warning(f'no redshift file with the extension .dat. Trying .txt...')
-            redshift_file = f'{path}/simu{sn}/postprocessing/cubes/lum/redshift_list.txt'
+            redshift_file = f'{path_sim}/simu{sn}/postprocessing/cubes/lum/redshift_list.txt'
             if not os.path.isfile(redshift_file):
                 err_file = os.path.join(log_dir, f'simu{sn}.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
@@ -129,10 +130,11 @@ for sn in sims_num:
                         save_spectra=False,
                         path_sim=path_sim,
                         path_params=path_params,
+                        path_spectra=path_spectra,
                         path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
 
             logger.info(f'xion looks like: {sim.xion}')
-            snapshots_file = f'{path}/simu{sn}/snapshots/diagnostics.dat'
+            snapshots_file = f'{path_sim}/simu{sn}/snapshots/diagnostics.dat'
             if not os.path.isfile(snapshots_file):
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
