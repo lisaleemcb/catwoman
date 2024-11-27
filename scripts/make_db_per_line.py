@@ -127,12 +127,12 @@ for sn in sims_num:
                         load_xion_cubes=True,
                         load_density_cubes=True,
                         reinitialise_spectra=True,
-                        save_spectra=False,
+                        save_spectra=True,
                         just_Pee=True,
                         path_sim=path_sim,
                         path_params=path_params,
                         path_spectra=path_spectra,
-                        path_Pee=f'/loreli/rmeriot/ps_ee/simu{sn}/postprocessing/cubes/ps_dtb')
+                        path_Pee=f'/loreli/rmeriot/ps_ee/simu14858/postprocessing/cubes/ps_dtb')
 
             logger.info(f'xion looks like: {sim.xion}')
             snapshots_file = f'{path_sim}/simu{sn}/snapshots/diagnostics.dat'

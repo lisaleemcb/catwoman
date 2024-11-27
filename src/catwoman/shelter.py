@@ -66,10 +66,10 @@ class Cat:
         if not os.path.exists(self.path_spectra):
                 os.makedirs(self.path_spectra)
         
-        self.Pee_path = f'{self.path_spectra}/simu{self.sim_n}_Pee_spectra.npz'
+        self.Pee_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pee_spectra.npz'
         if not just_Pee:
-            self.Pbb_path = f'{self.path_spectra}/simu{self.sim_n}_Pbb_spectra.npz'
-            self.Pxx_path = f'{self.path_spectra}/simu{self.sim_n}_Pxx_spectra.npz'
+            self.Pbb__spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pbb_spectra.npz'
+            self.Pxx_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pxx_spectra.npz'
 
         if path_Pee is not None:
             self.path_Pee = path_Pee
@@ -129,7 +129,8 @@ class Cat:
                 self.pspec_kwargs = pspec_kwargs
             
             if self.verbose:
-                print(f'power spectrum settings:')
+                print(f'Simulation runs from z={self.z.max()} to z={self.z.min()}')
+                print(f'Power spectrum settings:')
                 print(f'{self.pspec_kwargs}')
 
             if self.xion: # this just checks that the data cubes exist
@@ -153,10 +154,10 @@ class Cat:
                     if verbose:
                         print('Saving power spectra...')
 
-                    np.savez(self.Pee_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pee)
+                    np.savez(self.Pee_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pee)
                     if not just_Pee:
-                        np.savez(self.Pbb_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pbb)
-                        np.savez(self.Pxx_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pxx)
+                        np.savez(self.Pbb_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pbb)
+                        np.savez(self.Pxx_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pxx)
 
                 if self.skip_early:
                     self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
@@ -183,19 +184,19 @@ class Cat:
                 if self.verbose:
                     print('Loading precalculated spectra. If you would like fresh spectra, rerun with reinitialise_spectra=True')
 
-                if not os.path.exists(self.Pee_path):
-                        raise FileNotFoundError(f"The file '{self.Pee_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
+                if not os.path.exists(self.Pee_spectra_path):
+                        raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
                 
-                if not os.path.exists(self.Pbb_path):
-                        raise FileNotFoundError(f"The file '{self.Pbb_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
+                if not os.path.exists(self.Pbb_spectra_path):
+                        raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
                 
-                if not os.path.exists(self.Pxx_path):
-                        raise FileNotFoundError(f"The file '{self.Pxx_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
+                if not os.path.exists(self.Pxx_spectra_path):
+                        raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. Rerun with reinitialise_spectra=True and save_spectra=True.")
                 
-                Pee_file = np.load(self.Pee_path)
+                Pee_file = np.load(self.Pee_spectra_path)
                 if not just_Pee:
-                    Pbb_file = np.load(self.Pbb_path)
-                    Pxx_file = np.load(self.Pxx_path)
+                    Pbb_file = np.load(self.Pbb_spectra_path)
+                    Pxx_file = np.load(self.Pxx_spectra_path)
                 
                 self.k = Pee_file['k']
                 self.xe = Pee_file['xe']
