@@ -108,7 +108,7 @@ class Cat:
         fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
         if (load_params or reinitialise_spectra):
             if self.verbose:
-                print("Fetching params since you asked so nicely...")
+                print("Fetching params...")
             self.params = utils.read_params(f'{self.path_params}/{fn_params}')
 
         if load_xion_cubes:
@@ -135,11 +135,11 @@ class Cat:
             if self.xion: # this just checks that the data cubes exist
                 if verbose:
                     print('')
-                    print('Initialising spectra. This could take a while...')
+                    print('Initialising spectra since you asked so nicely! But this could take a while...')
                     print('')
-                self.Pbb_dict = self.calc_Pbb()
+                self.Pee_dict = self.calc_Pee()
                 if not just_Pee:
-                    self.Pee_dict = self.calc_Pee()
+                    self.Pbb_dict = self.calc_Pbb()
                     self.Pxx_dict = self.calc_Pxx()
 
                 self.z, self.xe = self.calc_ion_history()
@@ -225,8 +225,9 @@ class Cat:
         return np.sort(file_nums)
 
     def fetch_params(self):
+        # currently obsolete
         if self.verbose:
-            print("Fetching params since you asked so nicely...")
+            print("Fetching params...")
         fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
 
         df = pd.read_csv(f'{self.path_params}/{fn_params}', sep='\t', header=None)
@@ -254,8 +255,6 @@ class Cat:
                         (val, key) = line.split()
                         redshift_keys[key] = float(val)
 
-        if self.verbose:
-            print(f'Simulation redshifts from {np.asarray(list(redshift_keys.values())).min()} to {np.asarray(list(redshift_keys.values())).max()}')
         return redshift_keys
 
     def load_xion_cubes(self, nbins=512):

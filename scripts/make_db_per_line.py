@@ -128,6 +128,7 @@ for sn in sims_num:
                         load_density_cubes=True,
                         reinitialise_spectra=True,
                         save_spectra=False,
+                        just_Pee=True,
                         path_sim=path_sim,
                         path_params=path_params,
                         path_spectra=path_spectra,
