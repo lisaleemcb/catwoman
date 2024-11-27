@@ -96,6 +96,14 @@ for sn in sims_num:
     logger.info(f'ON SIMULATION {sn}')
     if sn in written:
         logger.info(f'Already parsed sim {sn}')
+
+        continue
+
+    if sn in skipped:
+        logger.info(f'Already parsed sim {sn} and decided to skip')
+
+        continue
+
     else:
         path_params = '/obs/emcbride/param_files'
         params_file = f'{path_params}/runtime_parameters_simulation_{sn}_reformatted.txt'
@@ -111,6 +119,9 @@ for sn in sims_num:
             logger_err.warning(f'no params file')
             print('skipping sim {sn}...')
             skipped.append(sn)
+
+            continue 
+
         elif not os.path.isfile(redshift_file):
             err_file = os.path.join(log_dir, f'simu{sn}.failed')
             logger_err = utils.setup_logger(logger_name, err_file)
@@ -124,6 +135,8 @@ for sn in sims_num:
                 logger_err.warning(f'no redshift file with the extension .txt')
                 print(f'skipping sim {sn}...')
                 skipped.append(sn)
+
+                continue
 
         else:
             logger.info('passed preliminary checks...loading sim...')
@@ -147,16 +160,25 @@ for sn in sims_num:
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
                 logger_err.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
+
+                continue
+
             if not sim.density:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
                 logger_err.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
+
+                continue
+
             if not sim.xion:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
                 logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
+
+                continue
+
 
             elif sim.xion:
                 if max(sim.xe) < .9:
@@ -164,6 +186,8 @@ for sn in sims_num:
                     logger_err = utils.setup_logger(logger_name, err_file)
                     skipped.append(sn)
                     logger_err.warning('sim does not complete reionisation')
+
+                    continue
 
                 elif max(sim.xe) >= .9:
                     print('')
@@ -184,10 +208,13 @@ for sn in sims_num:
                     zrange = np.where((sim.xe >= .01) & (sim.xe <= .98))[0]
                     krange = np.where((sim.k >= k_res[0]) & (sim.k <= 2.0))[0]
 
+                    data = sim.Pee[np.ix_(zrange, krange)]
+                    obs_errs = err_spline(sim.k[krange]) * data
+
                     fit = ksz.analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
-                                            data=sim.Pee[np.ix_(zrange, krange)],
+                                            data=data,
                                             initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
-                                            debug=False, verbose=False, nsteps=10)
+                                            debug=False, verbose=False, nsteps=10, obs_errs=obs_errs)
                     
                     # # Combine the directory path and file name to create the full file path using os.path.join
                     lklhd_file = os.path.join(lklhd_path, f'lklhd_simu{sn}')
