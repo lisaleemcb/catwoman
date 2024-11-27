@@ -96,11 +96,12 @@ for sn in sims_num:
     logger.info(f'ON SIMULATION {sn}')
     if sn in written:
         logger.info(f'Already parsed sim {sn}')
-
+        print('Skipping due to already being written!')
         continue
 
     if sn in skipped:
         logger.info(f'Already parsed sim {sn} and decided to skip')
+        print('Skipping due to incomplete sim!')
 
         continue
 
