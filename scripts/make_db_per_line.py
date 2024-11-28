@@ -194,7 +194,6 @@ for sn in sims_num:
                     continue
 
                 elif max(sim.xe) >= .9:
-                    print('')
                     print('Now onto the science!')
                     logger.info('sim reaches ionisation fraction 90%, starting analysis...')
 

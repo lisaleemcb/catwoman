@@ -185,12 +185,13 @@ class Cat:
                 if not os.path.exists(self.Pee_spectra_path):
                         raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.\nRerun with reinitialise_spectra=True and save_spectra=True.")
                 
-                if not os.path.exists(self.Pbb_spectra_path):
-                        raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
-                
-                if not os.path.exists(self.Pxx_spectra_path):
-                        raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
-                
+                if not just_Pee:
+                    if not os.path.exists(self.Pbb_spectra_path):
+                            raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
+                    
+                    if not os.path.exists(self.Pxx_spectra_path):
+                            raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
+                    
                 Pee_file = np.load(self.Pee_spectra_path)
                 if not just_Pee:
                     Pbb_file = np.load(self.Pbb_spectra_path)
@@ -244,7 +245,7 @@ class Cat:
         # fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
         fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.dat'
 
-        if not os.path.isfile(fn_z):
+        if not os.path.isfile(fn_z) or os.path.getsize(fn_z) == 0:
             print('No redshift file with the extension .dat...trying .txt...')
             fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.txt'
 
