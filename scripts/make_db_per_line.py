@@ -124,7 +124,7 @@ for sn in sims_num:
 
             continue 
 
-        elif not os.path.isfile(redshift_file):
+        elif not os.path.isfile(redshift_file) or os.path.getsize(fn_z) == 0:
             err_file = os.path.join(log_dir, f'simu{sn}.failed')
             logger_err = utils.setup_logger(logger_name, err_file)
 
