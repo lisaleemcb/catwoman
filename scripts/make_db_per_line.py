@@ -217,7 +217,7 @@ for sn in sims_num:
                     fit = ksz.analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
                                             data=data, load_errs=False,
                                             initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
-                                            debug=False, verbose=False, nsteps=10, obs_errs=obs_errs)
+                                            debug=False, verbose=True, nsteps=10, obs_errs=obs_errs)
                     
                     # # Combine the directory path and file name to create the full file path using os.path.join
                     lklhd_file = os.path.join(lklhd_path, f'lklhd_simu{sn}')
