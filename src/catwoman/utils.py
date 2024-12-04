@@ -62,7 +62,7 @@ def find_index(arr):
             return i
 
     print('No monotonically increasing part of this function. Are you sure this is correct?')
-    return NaN
+    return np.nan
 
 def unpack_data(spectra_dict):
     data = np.zeros((len(spectra_dict), spectra_dict[0]['P_k'].size))
