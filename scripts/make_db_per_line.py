@@ -40,7 +40,6 @@ Pdd = {'z': z_ref,
        'Pk': Pk_ref}
 
 def Pk(k, z, ref=Pdd):
-    z = z
     Pdd_shape = (k * z).shape
     #Pdd_interp = np.zeros(Pdd_shape)
     fit_points = [Pdd['z'], Pdd['k']]
@@ -182,9 +181,17 @@ for sn in sims_num:
 
                 continue
 
-
             elif sim.xion:
                 if max(sim.xe) < .9:
+                    err_file = os.path.join(log_dir, f'simu{sn}.incompletereion.failed')
+                    logger_err = utils.setup_logger(logger_name, err_file)
+                    skipped.append(sn)
+                    np.save('skipped.npy', skipped)
+                    logger_err.warning('sim does not complete reionisation')
+
+                    continue
+
+                elif(np.isnan(utils.find_index(sim.xe))[0]):
                     err_file = os.path.join(log_dir, f'simu{sn}.incompletereion.failed')
                     logger_err = utils.setup_logger(logger_name, err_file)
                     skipped.append(sn)
@@ -196,6 +203,8 @@ for sn in sims_num:
                 elif max(sim.xe) >= .9:
                     print('Now onto the science!')
                     logger.info('sim reaches ionisation fraction 90%, starting analysis...')
+
+            
 
 
                     # print('saving files data...')
@@ -222,6 +231,8 @@ for sn in sims_num:
                     # # Combine the directory path and file name to create the full file path using os.path.join
                     lklhd_file = os.path.join(lklhd_path, f'lklhd_simu{sn}')
                     np.save(lklhd_file, fit.lklhd)
+
+
 
                     bf_params[sn] = fit.lklhd_params
                     bf_file = os.path.join(lklhd_path, f'bestfit_params_simu{sn}')
