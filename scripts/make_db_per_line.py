@@ -191,7 +191,7 @@ for sn in sims_num:
 
                     continue
 
-                elif(np.isnan(utils.find_index(sim.xe))[0]):
+                elif(np.isnan(utils.find_index(sim.xe))):
                     err_file = os.path.join(log_dir, f'simu{sn}.incompletereion.failed')
                     logger_err = utils.setup_logger(logger_name, err_file)
                     skipped.append(sn)
