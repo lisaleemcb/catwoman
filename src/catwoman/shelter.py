@@ -159,6 +159,8 @@ class Cat:
 
                 if self.skip_early:
                     self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
+                    if np.isnan(self.skip):
+                        self.skip = 0
                 else:
                     self.skip = 0
 
