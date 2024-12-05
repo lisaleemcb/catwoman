@@ -39,7 +39,7 @@ Pdd_ref = {'z': z_ref,
        'k': k_ref,
        'Pk': Pk_ref}
 
-def Pk(k, z, ref=Pdd):
+def Pk(k, z, ref=Pdd_ref):
     Pdd_shape = (k * z).shape
     #Pdd_interp = np.zeros(Pdd_shape)
     fit_points = [Pdd_ref['z'], Pdd_ref['k']]
