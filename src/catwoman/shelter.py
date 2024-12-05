@@ -177,13 +177,17 @@ class Cat:
                     print('')
 
             if not self.xion:
+                print('')
                 print('No spectra here, only danger!!!')
+                print('')
 
         elif not reinitialise_spectra:
             if load_spectra:
                 if self.verbose:
+                    print('')
                     print('Loading precalculated spectra. If you would like fresh spectra, rerun with reinitialise_spectra=True')
-
+                    print('')
+                    
                 if not os.path.exists(self.Pee_spectra_path):
                         raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.\nRerun with reinitialise_spectra=True and save_spectra=True.")
                 

@@ -204,9 +204,6 @@ for sn in sims_num:
                     print('Now onto the science!')
                     logger.info('sim reaches ionisation fraction 90%, starting analysis...')
 
-            
-
-
                     # print('saving files data...')
                     # xe_file = os.path.join(xe_path, f'xe_history_simu{sn}')
                     # np.savez(xe_file, z=sim.z, xe=sim.xe)
@@ -220,24 +217,33 @@ for sn in sims_num:
                     zrange = np.where((sim.xe >= .01) & (sim.xe <= .98))[0]
                     krange = np.where((sim.k >= k_res[0]) & (sim.k <= 2.0))[0]
 
+                    Pdd = Pk(sim.k, sim.z[:, None])
+                    model = ksz.Pee.Gorce(sim.k, sim.z, sim.xe, Pdd=Pdd,
+                                model_params=modelparams_Gorce2022,
+                                verbose=True)
+                    
+                    obs_errs = err_spline(sim.k[krange]) * model[np.ix_(zrange, krange)]
                     data = sim.Pee[np.ix_(zrange, krange)]
-                    obs_errs = err_spline(sim.k[krange]) * data
 
                     fit = ksz.analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
                                             data=data, load_errs=False,
-                                            initialise=True, Pdd=Pk(sim.k[krange], sim.z[zrange, None]),
+                                            initialise=True, Pdd=Pdd[np.ix_(zrange, krange)],
                                             debug=False, verbose=True, nsteps=10, obs_errs=obs_errs)
+                    
+                    logger.info(f'saving matter power density with name Pdd_simu{sn}')
+                    np.save('/obs/emcbride/spectra/Pdd/Pdd_simu{sn}', Pdd)
+                    np.save('/obs/emcbride/obs_errs/obs_errs_simu{sn}', obs_errs)
                     
                     # # Combine the directory path and file name to create the full file path using os.path.join
                     lklhd_file = os.path.join(lklhd_path, f'lklhd_simu{sn}')
                     np.save(lklhd_file, fit.lklhd)
 
-
-
+                    bf_params = {}
                     bf_params[sn] = fit.lklhd_params
                     bf_file = os.path.join(lklhd_path, f'bestfit_params_simu{sn}')
 
-                    print('Saving best fit params...')   
+                    print('Saving best fit params...') 
+                    logger.info(f'saving best fit params with name bestfit_params_simu{sn}')  
                     np.savez(bf_file, bf=bf_params)
 
                     # KSZ simulation
