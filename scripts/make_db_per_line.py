@@ -231,8 +231,8 @@ for sn in sims_num:
                                             debug=False, verbose=True, nsteps=10, obs_errs=obs_errs)
                     
                     logger.info(f'saving matter power density with name Pdd_simu{sn}')
-                    np.save('/obs/emcbride/spectra/Pdd/Pdd_simu{sn}', Pdd)
-                    np.save('/obs/emcbride/obs_errs/obs_errs_simu{sn}', obs_errs)
+                    np.save(f'/obs/emcbride/spectra/Pdd/Pdd_simu{sn}', Pdd)
+                    np.save(f'/obs/emcbride/obs_errs/obs_errs_simu{sn}', obs_errs)
                     
                     # # Combine the directory path and file name to create the full file path using os.path.join
                     lklhd_file = os.path.join(lklhd_path, f'lklhd_simu{sn}')
