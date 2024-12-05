@@ -100,7 +100,7 @@ for sn in sims_num:
 
     if sn in skipped:
         logger.info(f'Already parsed sim {sn} and decided to skip')
-        print('Skipping due to incomplete sim!')
+        print('Skipping since in to skip file!')
 
         continue
 
@@ -222,7 +222,7 @@ for sn in sims_num:
                                 model_params=modelparams_Gorce2022,
                                 verbose=True)
                     
-                    obs_errs = err_spline(sim.k[krange]) * model[np.ix_(zrange, krange)]
+                    obs_errs = err_spline(sim.k[krange]) * model.spectra[np.ix_(zrange, krange)]
                     data = sim.Pee[np.ix_(zrange, krange)]
 
                     fit = ksz.analyse.Fit(zrange, krange, cp.deepcopy(modelparams_Gorce2022), sim,
