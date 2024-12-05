@@ -35,15 +35,15 @@ k_ref = np.load('/obs/emcbride/catwoman/refs/Pdd/k.npy')
 z_ref = np.load('/obs/emcbride/catwoman/refs/Pdd/z.npy')
 Pk_ref = np.load('/obs/emcbride/catwoman/refs/Pdd/Pk.npy')
 
-Pdd = {'z': z_ref,
+Pdd_ref = {'z': z_ref,
        'k': k_ref,
        'Pk': Pk_ref}
 
 def Pk(k, z, ref=Pdd):
     Pdd_shape = (k * z).shape
     #Pdd_interp = np.zeros(Pdd_shape)
-    fit_points = [Pdd['z'], Pdd['k']]
-    values = np.log10(Pdd['Pk'])
+    fit_points = [Pdd_ref['z'], Pdd_ref['k']]
+    values = np.log10(Pdd_ref['Pk'])
 
     interp = RegularGridInterpolator(fit_points, values, bounds_error=False, fill_value=np.log10(0.0))
     broadcasted_z = np.broadcast_to(z, Pdd_shape)
