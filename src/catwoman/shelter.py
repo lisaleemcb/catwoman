@@ -37,7 +37,11 @@ class Cat:
                 path_Pee = None,
                 path_ion=None,
                 path_xion = None,
-                path_density = None):
+                path_density = None,
+                k=np.array([0.021227 , 0.0300195, 0.0392038, 0.0497301, 0.0659062, 0.0834707,
+                            0.1051155, 0.132222 , 0.1692068, 0.2162669, 0.2754583, 0.3508495,
+                            0.4475445, 0.5709843, 0.7276318, 0.9274267, 1.1823019, 1.5068212,
+                            1.9204267, 2.4476898])):
     
         self.sim_n = sim_n
         self.path_sim = path_sim
@@ -68,7 +72,7 @@ class Cat:
                 os.makedirs(self.path_spectra)
 
         if LoReLi_format:
-            self.Pee_spectra_path  = f'{self.path_sim}/ps_ee/simu{self.sim_n}/postprocessing/cubes/ps_dtb'
+            self.Pee_spectra_path  = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/ps_dtb'
         else: 
             self.Pee_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pee_spectra.npz'
 
@@ -222,41 +226,67 @@ class Cat:
                         print('')
                         print('Loading precalculated spectra (LoReLi format). If you would like fresh spectra, rerun with reinitialise_spectra=True')
                         print('')
-                        print("Fetching reference files at required for LoReLi format...")
+                        print("Fetching reference files as required for LoReLi format...")
 
-                    self.file_nums = self.gen_filenums()
+                    # file_nums = []
+                    # for filename in os.listdir(f'{self.path_xion}'):
+                    #     basename, extension = os.path.splitext(filename)
+
+                    #     file_nums.append(basename.split('out')[1])
+
+                    # return np.sort(file_nums)
+                
+                    # self.file_nums = self.gen_filenums()
                     self.redshift_keys = self.fetch_redshifts()
-                    self.z = self.redshift_keys.values()
 
                     ion_histories = np.load(path_ion, allow_pickle=True)
                     ion_histories = ion_histories['arr_0'].item()
+
+                    self.z = ion_histories[self.sim_n]['z']
                     self.xe = ion_histories[self.sim_n]['xe']
-                    # TODO: check that the redshift is the same coming out of this
                         
                     spectra = []
+                    z_indices = []
+                 #   print(f'redshift are: \n \t{self.z}')
                     for key in self.redshift_keys.keys():
                         fn = f'{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat'
+                        #print(fn)
                         if os.path.isfile(fn):
-                        #   print(f'Log has file {key}')
-                            s = np.genfromtxt(fn)
-                            spectra.append(s)
+                            if np.any(np.isclose(self.z, self.redshift_keys[key], atol=.01)):
+                                index = np.where(np.isclose(self.z, self.redshift_keys[key], atol=.01))[0]
+                                z_indices.append(index)
+                          #      print(f'Log has redshift {self.redshift_keys[key]}')
+                                s = np.genfromtxt(fn)
+                                spectra.append(s)
 
                     self.k = spectra[0][:,0]
-                    self.Pee = np.zeros((self.z.size, self.k.size))
-                    for i in range(self.z.size):
-                        self.Pee[i] = spectra[i][:,1]
                     
+                    print(f'Indices: {z_indices}')
+                    self.z = self.z[z_indices].flatten()
+                    self.xe = self.xe[z_indices].flatten()
+
+                    if k is not None:
+                        self.k = k
+
+                    self.Pee = np.zeros((len(spectra), self.k.size))
+
+                    print(f'Pee shape is {self.Pee.shape} but the length of spectra is {len(spectra)}')
+                    for i in range(len(spectra)):
+                        self.Pee[i] = spectra[i][:,1].flatten()
 
                     if self.skip_early:
                         self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
                     else:
                         self.skip = 0
-                    self.z = Pee_file['z'][self.skip:]
+                    
+                    self.z = self.z[self.skip:]
                     self.xe = self.xe[self.skip:]
-                    self.Pee = Pee_file['Pk'][self.skip:]
+                    self.Pee = self.Pee[self.skip:]
+         
                     if not just_Pee:
-                        self.Pbb = Pbb_file['Pk'][self.skip:]
-                        self.Pxx = Pxx_file['Pk'][self.skip:]
+                        pass
+                       # self.Pbb = Pbb_file['Pk'][self.skip:]
+                       # self.Pxx = Pxx_file['Pk'][self.skip:]
 
                 if verbose:
                     print('')
@@ -295,7 +325,7 @@ class Cat:
 
         if not os.path.isfile(fn_z) or os.path.getsize(fn_z) == 0:
             print('No redshift file with the extension .dat...trying .txt...')
-            fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.txt'
+            fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
 
         redshift_keys = {}
         with open(fn_z) as f:
