@@ -30,14 +30,15 @@ class Cat:
                 reinitialise_spectra=False,
                 save_spectra=False,
                 just_Pee=True,
+                LoReLi_format=False,
                 path_sim='/Users/emcbride/kSZ/data/LoReLi',
                 path_params = None,
                 path_spectra=None,
                 path_Pee = None,
+                path_ion=None,
                 path_xion = None,
                 path_density = None):
     
-
         self.sim_n = sim_n
         self.path_sim = path_sim
         self.path_Pee = path_Pee
@@ -65,16 +66,15 @@ class Cat:
             
         if not os.path.exists(self.path_spectra):
                 os.makedirs(self.path_spectra)
-        
-        self.Pee_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pee_spectra.npz'
+
+        if LoReLi_format:
+            self.Pee_spectra_path  = f'{self.path_sim}/ps_ee/simu{self.sim_n}/postprocessing/cubes/ps_dtb'
+        else: 
+            self.Pee_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pee_spectra.npz'
+
         if not just_Pee:
             self.Pbb__spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pbb_spectra.npz'
             self.Pxx_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pxx_spectra.npz'
-
-        if path_Pee is not None:
-            self.path_Pee = path_Pee
-        else:
-            self.path_Pee = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/ps_ee'
 
         if path_xion is not None:
             self.path_xion = path_xion
@@ -183,38 +183,80 @@ class Cat:
 
         elif not reinitialise_spectra:
             if load_spectra:
-                if self.verbose:
-                    print('')
-                    print('Loading precalculated spectra. If you would like fresh spectra, rerun with reinitialise_spectra=True')
-                    print('')
+                if not LoReLi_format:
+                    if self.verbose:
+                        print('')
+                        print('Loading precalculated spectra. If you would like fresh spectra, rerun with reinitialise_spectra=True')
+                        print('')
+                        
+                    if not os.path.exists(self.Pee_spectra_path):
+                            raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.\nRerun with reinitialise_spectra=True and save_spectra=True.")
                     
-                if not os.path.exists(self.Pee_spectra_path):
-                        raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.\nRerun with reinitialise_spectra=True and save_spectra=True.")
+                    if not just_Pee:
+                        if not os.path.exists(self.Pbb_spectra_path):
+                                raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
+                        
+                        if not os.path.exists(self.Pxx_spectra_path):
+                                raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
+                        
+                    Pee_file = np.load(self.Pee_spectra_path)
+                    if not just_Pee:
+                        Pbb_file = np.load(self.Pbb_spectra_path)
+                        Pxx_file = np.load(self.Pxx_spectra_path)
+                    
+                    self.k = Pee_file['k']
+                    self.xe = Pee_file['xe']
+                    if self.skip_early:
+                        self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
+                    else:
+                        self.skip = 0
+                    self.z = Pee_file['z'][self.skip:]
+                    self.xe = self.xe[self.skip:]
+                    self.Pee = Pee_file['Pk'][self.skip:]
+                    if not just_Pee:
+                        self.Pbb = Pbb_file['Pk'][self.skip:]
+                        self.Pxx = Pxx_file['Pk'][self.skip:]
                 
-                if not just_Pee:
-                    if not os.path.exists(self.Pbb_spectra_path):
-                            raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
+                elif LoReLi_format:
+                    if self.verbose:
+                        print('')
+                        print('Loading precalculated spectra (LoReLi format). If you would like fresh spectra, rerun with reinitialise_spectra=True')
+                        print('')
+                        print("Fetching reference files at required for LoReLi format...")
+
+                    self.file_nums = self.gen_filenums()
+                    self.redshift_keys = self.fetch_redshifts()
+                    self.z = self.redshift_keys.values()
+
+                    ion_histories = np.load(path_ion, allow_pickle=True)
+                    ion_histories = ion_histories['arr_0'].item()
+                    self.xe = ion_histories[self.sim_n]['xe']
+                    # TODO: check that the redshift is the same coming out of this
+                        
+                    spectra = []
+                    for key in self.redshift_keys.keys():
+                        fn = f'{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat'
+                        if os.path.isfile(fn):
+                        #   print(f'Log has file {key}')
+                            s = np.genfromtxt(fn)
+                            spectra.append(s)
+
+                    self.k = spectra[0][:,0]
+                    self.Pee = np.zeros((self.z.size, self.k.size))
+                    for i in range(self.z.size):
+                        self.Pee[i] = spectra[i][:,1]
                     
-                    if not os.path.exists(self.Pxx_spectra_path):
-                            raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
-                    
-                Pee_file = np.load(self.Pee_spectra_path)
-                if not just_Pee:
-                    Pbb_file = np.load(self.Pbb_spectra_path)
-                    Pxx_file = np.load(self.Pxx_spectra_path)
-                
-                self.k = Pee_file['k']
-                self.xe = Pee_file['xe']
-                if self.skip_early:
-                    self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
-                else:
-                    self.skip = 0
-                self.z = Pee_file['z'][self.skip:]
-                self.xe = self.xe[self.skip:]
-                self.Pee = Pee_file['Pk'][self.skip:]
-                if not just_Pee:
-                    self.Pbb = Pbb_file['Pk'][self.skip:]
-                    self.Pxx = Pxx_file['Pk'][self.skip:]
+
+                    if self.skip_early:
+                        self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
+                    else:
+                        self.skip = 0
+                    self.z = Pee_file['z'][self.skip:]
+                    self.xe = self.xe[self.skip:]
+                    self.Pee = Pee_file['Pk'][self.skip:]
+                    if not just_Pee:
+                        self.Pbb = Pbb_file['Pk'][self.skip:]
+                        self.Pxx = Pxx_file['Pk'][self.skip:]
 
                 if verbose:
                     print('')
