@@ -252,46 +252,51 @@ class Cat:
                         fn = f'{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat'
                         #print(fn)
                         if os.path.isfile(fn):
-                            if np.any(np.isclose(self.z, self.redshift_keys[key], atol=.01)):
-                                index = np.where(np.isclose(self.z, self.redshift_keys[key], atol=.01))[0]
+                            if np.any(np.isclose(self.z, self.redshift_keys[key], atol=.001)):
+                                index = np.where(np.isclose(self.z, self.redshift_keys[key], atol=.001))[0][0]
                                 z_indices.append(index)
                           #      print(f'Log has redshift {self.redshift_keys[key]}')
                                 s = np.genfromtxt(fn)
                                 spectra.append(s)
 
-                    self.k = spectra[0][:,0]
-                    
-                    print(f'Indices: {z_indices}')
-                    self.z = self.z[z_indices].flatten()
-                    self.xe = self.xe[z_indices].flatten()
+                    if spectra:
+                        self.k = spectra[0][:,0]
+                        
+                        #print(f'Indices: {z_indices}')
+                        self.z = self.z[z_indices].flatten()
+                        self.xe = self.xe[z_indices].flatten()
 
-                    if k is not None:
-                        self.k = k
+                        if k is not None:
+                            self.k = k
 
-                    self.Pee = np.zeros((len(spectra), self.k.size))
+                        self.Pee = np.zeros((len(spectra), self.k.size))
 
-                    print(f'Pee shape is {self.Pee.shape} but the length of spectra is {len(spectra)}')
-                    for i in range(len(spectra)):
-                        self.Pee[i] = spectra[i][:,1].flatten()
+                        #print(f'Pee shape is {self.Pee.shape} but the length of spectra is {len(spectra)}')
+                        for i in range(len(spectra)):
+                            self.Pee[i] = spectra[i][:,1].flatten()
 
-                    if self.skip_early:
-                        self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
-                    else:
-                        self.skip = 0
-                    
-                    self.z = self.z[self.skip:]
-                    self.xe = self.xe[self.skip:]
-                    self.Pee = self.Pee[self.skip:]
-         
-                    if not just_Pee:
-                        pass
-                       # self.Pbb = Pbb_file['Pk'][self.skip:]
-                       # self.Pxx = Pxx_file['Pk'][self.skip:]
+                        if self.skip_early:
+                            self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
+                        else:
+                            self.skip = 0
+                        
+                        self.z = self.z[self.skip:]
+                        self.xe = self.xe[self.skip:]
+                        self.Pee = self.Pee[self.skip:]
+            
+                        if not just_Pee:
+                            pass
+                        # self.Pbb = Pbb_file['Pk'][self.skip:]
+                        # self.Pxx = Pxx_file['Pk'][self.skip:]
 
-                if verbose:
-                    print('')
-                    print(f"Simulation {self.sim_n} loaded and ready for science!!")
-                    print('')
+                    if verbose:
+                        print('')
+                        print(f"Simulation {self.sim_n} loaded and ready for science!!")
+                        print('')
+
+                    if not spectra:
+                        self.Pee = np.nan
+                        print(f'Sim  {self.sim_n} is loaded but there is no data!')
 
     def gen_filenums(self):
         file_nums = []
@@ -324,7 +329,8 @@ class Cat:
         fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.dat'
 
         if not os.path.isfile(fn_z) or os.path.getsize(fn_z) == 0:
-            print('No redshift file with the extension .dat...trying .txt...')
+            if self.verbose:
+                print('No redshift file with the extension .dat...trying .txt...')
             fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
 
         redshift_keys = {}
