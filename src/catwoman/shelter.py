@@ -32,6 +32,7 @@ class Cat:
                 just_Pee=True,
                 LoReLi_format=False,
                 path_sim='/Users/emcbride/kSZ/data/LoReLi',
+                path_redshifts='/Users/emcbride/kSZ/data/LoReLi_summaries/redshift_list.dat',
                 path_params = None,
                 path_spectra=None,
                 path_Pee = None,
@@ -41,13 +42,16 @@ class Cat:
                 k=np.array([0.021227 , 0.0300195, 0.0392038, 0.0497301, 0.0659062, 0.0834707,
                             0.1051155, 0.132222 , 0.1692068, 0.2162669, 0.2754583, 0.3508495,
                             0.4475445, 0.5709843, 0.7276318, 0.9274267, 1.1823019, 1.5068212,
-                            1.9204267, 2.4476898])):
+                            1.9204267, 2.4476898]),
+                debug=False):
     
         self.sim_n = sim_n
         self.path_sim = path_sim
+        self.path_redshifts = path_redshifts
         self.path_Pee = path_Pee
         self.verbose = verbose
         self.skip_early = skip_early
+        self.debug = debug
 
         self.box_size= 296.0 # Mpc
         self.k_res = ((2 * np.pi) / self.box_size, (2 * np.pi * 256) / self.box_size / 2)
@@ -248,16 +252,31 @@ class Cat:
                     spectra = []
                     z_indices = []
                  #   print(f'redshift are: \n \t{self.z}')
+                    self.which_keys = []
                     for key in self.redshift_keys.keys():
                         fn = f'{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat'
                         #print(fn)
                         if os.path.isfile(fn):
-                            if np.any(np.isclose(self.z, self.redshift_keys[key], atol=.001)):
-                                index = np.where(np.isclose(self.z, self.redshift_keys[key], atol=.001))[0][0]
+                            keyz_rounded = utils.round_sig_figs(self.redshift_keys[key])
+                            if self.debug:
+                                print(f'key: {key}, redshift: {self.redshift_keys[key]}, zrounded: {keyz_rounded}')
+                            match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
+                            if len(match) > 0:
+                                self.which_keys.append(key)
+                                index = match[0]
+                                if self.debug:
+                                    print(f'keyz: {keyz_rounded}, z_xe: {self.z[index]}')
+                                    print()
                                 z_indices.append(index)
                           #      print(f'Log has redshift {self.redshift_keys[key]}')
                                 s = np.genfromtxt(fn)
-                                spectra.append(s)
+                                if len(s.shape) == 2:
+                                    spectra.append(s)
+                                   # print(f'key: {key}, spectra: {s.shape}')
+                            else:
+                                if self.debug:
+                                    print('no match!')
+                                    print()
 
                     if spectra:
                         self.k = spectra[0][:,0]
@@ -326,15 +345,11 @@ class Cat:
         if self.verbose:
             print('Fetching redshifts...')
         # fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
-        fn_z = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/lum/redshift_list.dat'
-
-        if not os.path.isfile(fn_z) or os.path.getsize(fn_z) == 0:
-            if self.verbose:
-                print('No redshift file with the extension .dat...trying .txt...')
-            fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
+        if self.verbose:
+            print(f'Trying {self.path_redshifts}')
 
         redshift_keys = {}
-        with open(fn_z) as f:
+        with open(self.path_redshifts) as f:
                     for line in f:
                         (val, key) = line.split()
                         redshift_keys[key] = float(val)

@@ -81,6 +81,17 @@ def tension(sim):
 
     return tension
 
+def round_sig_figs(x, sig_figs=5):
+    import numbers
+    magnitude = np.floor(np.log10(x))  # Compute the order of magnitude for each value
+    decimal_places = sig_figs - magnitude.astype(int) - 1  # Determine decimal places for each value
+
+    if isinstance(decimal_places, (int, numbers.Number)):
+        return np.round(x, decimal_places)
+
+    if isinstance(decimal_places, (list, np.ndarray)):
+        return np.array([np.round(val, dec) for val, dec in zip(x, decimal_places)])
+
 def setup_logger(logger_name, log_file, level=logging.INFO):
     handler = logging.FileHandler(log_file)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
