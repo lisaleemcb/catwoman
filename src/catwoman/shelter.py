@@ -159,6 +159,7 @@ class Cat:
                 if save_spectra:
                     if verbose:
                         print('Saving power spectra...')
+                        print(f'   Pee path: {self.Pee_spectra_path}')
 
                     np.savez(self.Pee_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pee)
                     if not just_Pee:
@@ -248,6 +249,10 @@ class Cat:
 
                     self.z = ion_histories[self.sim_n]['z']
                     self.xe = ion_histories[self.sim_n]['xe']
+
+                    if self.debug:
+                        print(f'ionisation fraction is:')
+                        print(f'\t xe={self.xe}')
                         
                     spectra = []
                     z_indices = []
@@ -258,9 +263,13 @@ class Cat:
                         #print(fn)
                         if os.path.isfile(fn):
                             keyz_rounded = utils.round_sig_figs(self.redshift_keys[key])
+                            print(np.isclose(self.z, keyz_rounded, rtol=1e-3))
+                            match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
+
                             if self.debug:
                                 print(f'key: {key}, redshift: {self.redshift_keys[key]}, zrounded: {keyz_rounded}')
-                            match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
+                                print(f'match: {match}')
+                        
                             if len(match) > 0:
                                 self.which_keys.append(key)
                                 index = match[0]
