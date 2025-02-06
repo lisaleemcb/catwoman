@@ -96,6 +96,7 @@ class Cat:
 
         if verbose:
             print('You have told me that data lives in the following places:')
+            print(f'\tredshift list: {self.path_redshifts}')
             if load_params:
                 print(f'\tparams: {self.path_params}')
             if load_xion_cubes:
