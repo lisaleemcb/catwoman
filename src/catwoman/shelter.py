@@ -264,7 +264,6 @@ class Cat:
                         #print(fn)
                         if os.path.isfile(fn):
                             keyz_rounded = utils.round_sig_figs(self.redshift_keys[key])
-                            print(np.isclose(self.z, keyz_rounded, rtol=1e-3))
                             match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
 
                             if self.debug:
