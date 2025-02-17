@@ -23,7 +23,7 @@ class Cat:
                 verbose=False,
                 pspec_kwargs=None,
                 skip_early=True,
-                load_params=True,
+                load_params=False,
                 load_spectra=True,
                 load_xion_cubes=False,
                 load_density_cubes=False,
@@ -31,14 +31,14 @@ class Cat:
                 save_spectra=False,
                 just_Pee=True,
                 LoReLi_format=False,
-                path_sim='/Users/emcbride/kSZ/data/LoReLi',
-                path_redshifts='/Users/emcbride/kSZ/data/LoReLi_summaries/redshift_list.dat',
-                path_params = None,
-                path_spectra=None,
-                path_Pee = None,
-                path_ion=None,
-                path_xion = None,
-                path_density = None,
+                base_dir='/Users/emcbride/Datasets/LoReLi',
+                path_sim='Datasets/LoReLi',
+                path_redshifts='metadata/redshift_list.dat',
+                path_params = 'metadata/param_files',
+                path_spectra='ps_ee',
+                path_ionhistory='metadata/ion_histories_full.npz',
+                path_xion_cubes = None,
+                path_density_cubes = None,
                 k=np.array([0.021227 , 0.0300195, 0.0392038, 0.0497301, 0.0659062, 0.0834707,
                             0.1051155, 0.132222 , 0.1692068, 0.2162669, 0.2754583, 0.3508495,
                             0.4475445, 0.5709843, 0.7276318, 0.9274267, 1.1823019, 1.5068212,
@@ -46,9 +46,10 @@ class Cat:
                 debug=False):
     
         self.sim_n = sim_n
+        self.base_dir = base_dir
         self.path_sim = path_sim
         self.path_redshifts = path_redshifts
-        self.path_Pee = path_Pee
+        self.path_spectra = path_spectra
         self.verbose = verbose
         self.skip_early = skip_early
         self.debug = debug
@@ -61,49 +62,49 @@ class Cat:
             print(f'Loading sim number {sim_n}...')
             print(f'==============================')
 
+        if load_spectra and reinitialise_spectra:
+            raise ValueError("Both load_spectra and reinitialise_spectra can be set to true.")
+
         if load_params:
             if path_params is not None:
                 self.path_params = path_params
             else:
                 self.path_params = f'{self.path_sim}/simu{self.sim_n}'
-
-        if path_spectra is not None:
-            self.path_spectra = path_spectra
-        else:
-            self.path_spectra = f'{self.path_sim}/simu{self.sim_n}/spectra'
             
-        if not os.path.exists(self.path_spectra):
-                os.makedirs(self.path_spectra)
+            if self.base_dir:
+                self.path_params = f'{self.base_dir}/{self.path_params}'
 
-        if LoReLi_format:
-            self.Pee_spectra_path  = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/ps_dtb'
-        else: 
-            self.Pee_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pee_spectra.npz'
-
-        if not just_Pee:
-            self.Pbb__spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pbb_spectra.npz'
-            self.Pxx_spectra_path = f'{self.path_spectra}/simu{self.sim_n}_Pxx_spectra.npz'
-
-        if path_xion is not None:
-            self.path_xion = path_xion
+        if path_sim is not None:
+            self.path_sim = path_sim
         else:
-            self.path_xion = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/xion'
+            self.path_sim= f'{self.base_dir}/simu{self.sim_n}/spectra'
 
-        if path_density is not None:
-            self.path_density = path_density
+        if path_xion_cubes is not None:
+            self.path_xion_cubes = path_xion_cubes
         else:
-            self.path_density = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens'
+            self.path_xion_cubes = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/xion'
+
+        if path_density_cubes is not None:
+            self.path_density_cubes = path_density_cubes
+        else:
+            self.path_density_cubes = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens'
+
+        if self.base_dir:
+            self.path_redshifts = f'{self.base_dir}/{self.path_redshifts}'
 
         if verbose:
-            print('You have told me that data lives in the following places:')
-            print(f'\tredshift list: {self.path_redshifts}')
             if load_params:
+                print('Fetching params from:')
                 print(f'\tparams: {self.path_params}')
+                print('')
             if load_xion_cubes:
-                print(f'\tionisation cubes: {self.path_xion}')
+                print('Fetching xion cubes from:')
+                print(f'\tionisation cubes: {self.path_xion_cubes}')
+                print('')
             if load_density_cubes:
-                print(f'\tdensity cubes: {self.path_density}')
-            print('')
+                print('Fetching density cubes from:')
+                print(f'\tdensity cubes: {self.path_density_cubes}')
+                print('')
 
         if (load_xion_cubes or load_density_cubes or reinitialise_spectra):
             if verbose:
@@ -111,7 +112,6 @@ class Cat:
             self.file_nums = self.gen_filenums()
             self.redshift_keys = self.fetch_redshifts()
             self.z = self.redshift_keys.values()
-
 
         fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
         if (load_params or reinitialise_spectra):
@@ -191,144 +191,163 @@ class Cat:
                 print('No spectra here, only danger!!!')
                 print('')
 
-        elif not reinitialise_spectra:
-            if load_spectra:
-                if not LoReLi_format:
-                    if self.verbose:
-                        print('')
-                        print('Loading precalculated spectra. If you would like fresh spectra, rerun with reinitialise_spectra=True')
-                        print('')
-                        
-                    if not os.path.exists(self.Pee_spectra_path):
-                            raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.\nRerun with reinitialise_spectra=True and save_spectra=True.")
+        if load_spectra:
+            if LoReLi_format:
+                self.Pee_spectra_path  = f'{self.path_spectra}/simu{self.sim_n}/postprocessing/cubes/ps_dtb'
+            else: 
+                self.Pee_spectra_path = f'{self.path_spectra}/Pee/simu{self.sim_n}_Pee_spectra.npz'
+
+            if self.base_dir:
+                self.Pee_spectra_path = f'{self.base_dir}/{self.Pee_spectra_path}'
+                                        
+            if not os.path.exists(self.Pee_spectra_path):
+                raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.{os.linesep}Rerun with reinitialise_spectra=True and save_spectra=True.")
+
+            if not just_Pee:
+                self.Pbb_spectra_path = f'{self.path_spectra}/Pbb/simu{self.sim_n}_Pbb_spectra.npz'
+                self.Pxx_spectra_path = f'{self.path_spectra}/Pxx/simu{self.sim_n}_Pxx_spectra.npz'
+
+                if self.base_dir:
+                    self.Pbb_spectra_path = f'{self.base_dir}/{self.Pbb_spectra_path}'
+                    self.Pxx_spectra_path = f'{self.base_dir}/{self.Pxx_spectra_path}'
+
+                    if not os.path.exists(self.Pbb_spectra_path):
+                            raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
                     
-                    if not just_Pee:
-                        if not os.path.exists(self.Pbb_spectra_path):
-                                raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
-                        
-                        if not os.path.exists(self.Pxx_spectra_path):
-                                raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
-                        
-                    Pee_file = np.load(self.Pee_spectra_path)
-                    if not just_Pee:
-                        Pbb_file = np.load(self.Pbb_spectra_path)
-                        Pxx_file = np.load(self.Pxx_spectra_path)
+                    if not os.path.exists(self.Pxx_spectra_path):
+                            raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
+
+            if self.verbose:   
+                print('Loading the follow spectra from:')
+                print(f'\tPee: {self.Pee_spectra_path}')
+                if not just_Pee:
+                    print(f'\tPbb: {self.Pbb_spectra_path}')
+                    print(f'\tPxx: {self.Pxx_spectra_path}')
+
+            if not LoReLi_format: 
+                if self.verbose:
+                    print('')
+                    print('Loading precalculated spectra (from cubes). If you would like fresh spectra, rerun with reinitialise_spectra=True')
+                    print('')  
+
+                Pee_file = np.load(self.Pee_spectra_path)
+                if not just_Pee:
+                    Pbb_file = np.load(self.Pbb_spectra_path)
+                    Pxx_file = np.load(self.Pxx_spectra_path)
+                
+                self.k = Pee_file['k']
+                self.xe = Pee_file['xe']
+                if self.skip_early:
+                    self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
+                else:
+                    self.skip = 0
+                self.z = Pee_file['z'][self.skip:]
+                self.xe = self.xe[self.skip:]
+                self.Pee = Pee_file['Pk'][self.skip:]
+                if not just_Pee:
+                    self.Pbb = Pbb_file['Pk'][self.skip:]
+                    self.Pxx = Pxx_file['Pk'][self.skip:]
+            
+            elif LoReLi_format:
+                if self.verbose:
+                    print('')
+                    print('Loading precalculated spectra (LoReLi format). If you would like fresh spectra, rerun with reinitialise_spectra=True')
+                    print('')
+
+                self.redshift_keys = self.fetch_redshifts()
+
+                if self.base_dir:
+                    path_ionhistory = f'{self.base_dir}/{path_ionhistory}'
+
+                if self.verbose:
+                    print('Fetching ionisation history from:')
+                    print(f'\t {path_ionhistory}')
+
+                ion_histories = np.load(path_ionhistory, allow_pickle=True)
+                ion_histories = ion_histories['arr_0'].item()
+                
+                self.z = ion_histories[self.sim_n]['z']
+                self.xe = ion_histories[self.sim_n]['xe']
+
+                if self.debug:
+                    print(f'ionisation fraction is:')
+                    print(f'\t xe={self.xe}')
                     
-                    self.k = Pee_file['k']
-                    self.xe = Pee_file['xe']
+                spectra = []
+                z_indices = []
+                #   print(f'redshift are: \n \t{self.z}')
+                self.which_keys = []
+                for key in self.redshift_keys.keys():
+                    fn = f'{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat'
+                    #print(fn)
+                    if os.path.isfile(fn):
+                        keyz_rounded = utils.round_sig_figs(self.redshift_keys[key])
+                        match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
+
+                        if self.debug:
+                            print(f'key: {key}, redshift: {self.redshift_keys[key]}, zrounded: {keyz_rounded}')
+                            print(f'match: {match}')
+                    
+                        if len(match) > 0:
+                            self.which_keys.append(key)
+                            index = match[0]
+                            if self.debug:
+                                print(f'keyz: {keyz_rounded}, z_xe: {self.z[index]}')
+                                print()
+                            z_indices.append(index)
+                        #      print(f'Log has redshift {self.redshift_keys[key]}')
+                            s = np.genfromtxt(fn)
+                            if len(s.shape) == 2:
+                                spectra.append(s)
+                                # print(f'key: {key}, spectra: {s.shape}')
+                        else:
+                            if self.debug:
+                                print('no match!')
+                                print()
+
+                if spectra:
+                    self.k = spectra[0][:,0]
+                    
+                    #print(f'Indices: {z_indices}')
+                    self.z = self.z[z_indices].flatten()
+                    self.xe = self.xe[z_indices].flatten()
+
+                    if k is not None:
+                        self.k = k
+
+                    self.Pee = np.zeros((len(spectra), self.k.size))
+
+                    #print(f'Pee shape is {self.Pee.shape} but the length of spectra is {len(spectra)}')
+                    for i in range(len(spectra)):
+                        self.Pee[i] = spectra[i][:,1].flatten()
+
                     if self.skip_early:
                         self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
                     else:
                         self.skip = 0
-                    self.z = Pee_file['z'][self.skip:]
+                    
+                    self.z = self.z[self.skip:]
                     self.xe = self.xe[self.skip:]
-                    self.Pee = Pee_file['Pk'][self.skip:]
+                    self.Pee = self.Pee[self.skip:]
+        
                     if not just_Pee:
-                        self.Pbb = Pbb_file['Pk'][self.skip:]
-                        self.Pxx = Pxx_file['Pk'][self.skip:]
-                
-                elif LoReLi_format:
-                    if self.verbose:
-                        print('')
-                        print('Loading precalculated spectra (LoReLi format). If you would like fresh spectra, rerun with reinitialise_spectra=True')
-                        print('')
-                        print("Fetching reference files as required for LoReLi format...")
+                        pass
+                    # self.Pbb = Pbb_file['Pk'][self.skip:]
+                    # self.Pxx = Pxx_file['Pk'][self.skip:]
 
-                    # file_nums = []
-                    # for filename in os.listdir(f'{self.path_xion}'):
-                    #     basename, extension = os.path.splitext(filename)
+                if not spectra:
+                    self.Pee = np.nan
+                    print(f'Sim  {self.sim_n} is loaded but there is no data!')
 
-                    #     file_nums.append(basename.split('out')[1])
+        if verbose:
+            print('')
+            print(f"Simulation {self.sim_n} loaded and ready for science!!")
+            print('')
 
-                    # return np.sort(file_nums)
-                
-                    # self.file_nums = self.gen_filenums()
-                    self.redshift_keys = self.fetch_redshifts()
-
-                    ion_histories = np.load(path_ion, allow_pickle=True)
-                    ion_histories = ion_histories['arr_0'].item()
-
-                    self.z = ion_histories[self.sim_n]['z']
-                    self.xe = ion_histories[self.sim_n]['xe']
-
-                    if self.debug:
-                        print(f'ionisation fraction is:')
-                        print(f'\t xe={self.xe}')
-                        
-                    spectra = []
-                    z_indices = []
-                 #   print(f'redshift are: \n \t{self.z}')
-                    self.which_keys = []
-                    for key in self.redshift_keys.keys():
-                        fn = f'{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat'
-                        #print(fn)
-                        if os.path.isfile(fn):
-                            keyz_rounded = utils.round_sig_figs(self.redshift_keys[key])
-                            match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
-
-                            if self.debug:
-                                print(f'key: {key}, redshift: {self.redshift_keys[key]}, zrounded: {keyz_rounded}')
-                                print(f'match: {match}')
-                        
-                            if len(match) > 0:
-                                self.which_keys.append(key)
-                                index = match[0]
-                                if self.debug:
-                                    print(f'keyz: {keyz_rounded}, z_xe: {self.z[index]}')
-                                    print()
-                                z_indices.append(index)
-                          #      print(f'Log has redshift {self.redshift_keys[key]}')
-                                s = np.genfromtxt(fn)
-                                if len(s.shape) == 2:
-                                    spectra.append(s)
-                                   # print(f'key: {key}, spectra: {s.shape}')
-                            else:
-                                if self.debug:
-                                    print('no match!')
-                                    print()
-
-                    if spectra:
-                        self.k = spectra[0][:,0]
-                        
-                        #print(f'Indices: {z_indices}')
-                        self.z = self.z[z_indices].flatten()
-                        self.xe = self.xe[z_indices].flatten()
-
-                        if k is not None:
-                            self.k = k
-
-                        self.Pee = np.zeros((len(spectra), self.k.size))
-
-                        #print(f'Pee shape is {self.Pee.shape} but the length of spectra is {len(spectra)}')
-                        for i in range(len(spectra)):
-                            self.Pee[i] = spectra[i][:,1].flatten()
-
-                        if self.skip_early:
-                            self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
-                        else:
-                            self.skip = 0
-                        
-                        self.z = self.z[self.skip:]
-                        self.xe = self.xe[self.skip:]
-                        self.Pee = self.Pee[self.skip:]
-            
-                        if not just_Pee:
-                            pass
-                        # self.Pbb = Pbb_file['Pk'][self.skip:]
-                        # self.Pxx = Pxx_file['Pk'][self.skip:]
-
-                    if verbose:
-                        print('')
-                        print(f"Simulation {self.sim_n} loaded and ready for science!!")
-                        print('')
-
-                    if not spectra:
-                        self.Pee = np.nan
-                        print(f'Sim  {self.sim_n} is loaded but there is no data!')
 
     def gen_filenums(self):
         file_nums = []
-        for filename in os.listdir(f'{self.path_xion}'):
+        for filename in os.listdir(f'{self.path_xion_cubes}'):
             basename, extension = os.path.splitext(filename)
 
             file_nums.append(basename.split('out')[1])
@@ -352,10 +371,8 @@ class Cat:
 
     def fetch_redshifts(self):
         if self.verbose:
-            print('Fetching redshifts...')
-        # fn_z = f'{self.path_sim}/simu{self.sim_n}/redshift_list.dat'
-        if self.verbose:
-            print(f'Trying {self.path_redshifts}')
+            print('Fetching redshifts from:')
+            print(f'\t {self.path_redshifts}')
 
         redshift_keys = {}
         with open(self.path_redshifts) as f:
@@ -374,7 +391,7 @@ class Cat:
             # if self.verbose:
             #     print(f'Now on file {n}')
 
-            xion_file = f'{self.path_xion}/xion_256_out{n}.dat'
+            xion_file = f'{self.path_xion_cubes}/xion_256_out{n}.dat'
 
             # if self.verbose:
             #     print(f'Now reading in xion box from from {xion_file}')
@@ -405,7 +422,7 @@ class Cat:
             # if self.verbose:
             #    print(f'Now on file {n}')
 
-            density_file = f'{self.path_density}/dens_256_out{n}.dat'
+            density_file = f'{self.path_density_cubes}/dens_256_out{n}.dat'
 
             # if self.verbose:
             #     print(f'Now reading in density box from from {density_file}')
