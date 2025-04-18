@@ -100,6 +100,7 @@ for sn in sims_num:
                         reinitialise_spectra=True,
                         save_spectra=True,
                         just_Pee=True,
+                        base_dir=None,
                         redshifts_fn=redshifts_fn,
                         path_sim=path_sim,
                         path_params=path_params,
