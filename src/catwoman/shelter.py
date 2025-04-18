@@ -94,7 +94,7 @@ class Cat:
         if self.base_dir:
             self.redshifts_fn = f'{self.base_dir}/{self.redshifts_fn}'
 
-        if verbose:
+        if self.verbose:
             if load_params:
                 print('Fetching params from:')
                 print(f'\tparams: {self.path_params}')
@@ -109,7 +109,7 @@ class Cat:
                 print('')
 
         if (load_xion_cubes or load_density_cubes or reinitialise_spectra):
-            if verbose:
+            if self.verbose:
                 print("Fetching reference files...")
             self.file_nums = self.gen_filenums()
             self.redshift_keys = self.fetch_redshifts()
@@ -143,7 +143,7 @@ class Cat:
                 print(f'\t{self.pspec_kwargs}')
 
             if self.xion: # this just checks that the data cubes exist
-                if verbose:
+                if self.verbose:
                     print('')
                     print('Initialising spectra since you asked so nicely! But this could take a while...')
                     print('')
@@ -160,11 +160,12 @@ class Cat:
                     self.Pxx = utils.unpack_data(self.Pxx_dict)
 
                 if save_spectra:
-                    if verbose:
+                    self.Pee_spectra_path = f"{path_spectra}/simu{self.sim_n}_Pee_spectra.npz"
+                    
+                    if self.verbose:
                         print('Saving power spectra...')
                         print(f'   Pee path: {self.Pee_spectra_path}')
 
-                    self.Pee_spectra_path = f"{path_spectra}/simu{self.sim_n}_Pee_spectra.npz"
                     np.savez(self.Pee_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pee)
                     if not just_Pee:
                         np.savez(self.Pbb_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pbb)
@@ -184,7 +185,7 @@ class Cat:
                     self.Pbb = self.Pbb[self.skip:]
                     self.Pxx =self.Pxx[self.skip:]
 
-                if verbose:
+                if self.verbose:
                     print('')
                     print("Loaded and ready for science!!")
                     print('')
@@ -370,7 +371,7 @@ class Cat:
                     self.Pee = np.nan
                     print(f'Sim  {self.sim_n} is loaded but there is no data!')
 
-        if verbose:
+        if self.verbose:
             print('')
             print(f"Simulation {self.sim_n} loaded and ready for science!!")
             print('')
