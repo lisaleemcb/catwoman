@@ -22,14 +22,17 @@ args = parser.parse_args()
 
 redshifts_fn = 'obs/emcbride/redshift_list.dat'
 path_spectra = '/obs/emcbride/spectra/Pee'
-path_sim = '/obs/emcbride/sims'  # head folder holding all the simulation cubes
+path_sim = '/loreli/rmeriot/simus_loreli/' #'/obs/emcbride/sims'  # head folder holding all the simulation cubes
 
 # load simulations that are already parsed so we can skip
-skipped = np.load('skipped.npy')
-written = np.load('written.npy')
+# skipped = np.load('skipped.npy')
+# written = np.load('written.npy')
 
-written = written.tolist()
-skipped = skipped.tolist()
+# written = written.tolist()
+# skipped = skipped.tolist()
+
+skipped = []
+written = []
 
 print('So far the following simulations have been written out:')
 print(written)

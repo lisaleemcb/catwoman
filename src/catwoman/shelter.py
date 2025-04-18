@@ -28,15 +28,16 @@ class Cat:
                 load_xion_cubes=False,
                 load_density_cubes=False,
                 reinitialise_spectra=False,
+                use_LoReLi_xe=False,
                 save_spectra=False,
                 just_Pee=True,
                 LoReLi_format=False,
+                redshifts_fn='metadata/redshift_list.dat',
+                ionhistories_fn='metadata/ion_histories_full.npz',
                 base_dir='/Users/emcbride/Datasets/LoReLi',
                 path_sim='Datasets/LoReLi',
-                path_redshifts='metadata/redshift_list.dat',
                 path_params = 'metadata/param_files',
                 path_spectra='ps_ee',
-                path_ionhistory='metadata/ion_histories_full.npz',
                 path_xion_cubes = None,
                 path_density_cubes = None,
                 k=np.array([0.021227 , 0.0300195, 0.0392038, 0.0497301, 0.0659062, 0.0834707,
@@ -48,8 +49,9 @@ class Cat:
         self.sim_n = sim_n
         self.base_dir = base_dir
         self.path_sim = path_sim
-        self.path_redshifts = path_redshifts
+        self.redshifts_fn = redshifts_fn
         self.path_spectra = path_spectra
+        self.use_LoReLi_xe = use_LoReLi_xe
         self.verbose = verbose
         self.skip_early = skip_early
         self.debug = debug
@@ -90,7 +92,7 @@ class Cat:
             self.path_density_cubes = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens'
 
         if self.base_dir:
-            self.path_redshifts = f'{self.base_dir}/{self.path_redshifts}'
+            self.redshifts_fn = f'{self.base_dir}/{self.redshifts_fn}'
 
         if verbose:
             if load_params:
@@ -162,6 +164,7 @@ class Cat:
                         print('Saving power spectra...')
                         print(f'   Pee path: {self.Pee_spectra_path}')
 
+                    self.Pee_spectra_path = f"{path_spectra}/simu{self.sim_n}_Pee_spectra.npz"
                     np.savez(self.Pee_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pee)
                     if not just_Pee:
                         np.savez(self.Pbb_spectra_path, k=self.k, z=self.z, xe=self.xe, Pk=self.Pbb)
@@ -241,9 +244,37 @@ class Cat:
                     self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
                 else:
                     self.skip = 0
+
                 self.z = Pee_file['z'][self.skip:]
                 self.xe = self.xe[self.skip:]
                 self.Pee = Pee_file['Pk'][self.skip:]
+
+                if self.use_LoReLi_xe:
+                    if self.verbose:
+                        print('Subbing in LoReLi ionisation history...')
+                    if self.base_dir:
+                        ionhistories_fn = f'{self.base_dir}/{ionhistories_fn}'
+
+                    ion_histories = np.load(ionhistories_fn, allow_pickle=True)
+                    ion_histories = ion_histories['arr_0'].item()
+                
+                    z_LoReLi = ion_histories[self.sim_n]['z']
+                    xe_LoReLi = ion_histories[self.sim_n]['xe']
+
+                    tol = 0.01  # tolerance
+                    diff = np.abs(z_LoReLi[:, None] - self.z[None, :])
+                    matches = np.where(diff <= tol)
+
+# matches[0] are indices in `a`, matches[1] are corresponding indices in `b`
+                    
+                    self.z = z_LoReLi[matches[0]]
+                    self.xe = xe_LoReLi[matches[0]]
+                    self.Pee = self.Pee[matches[1],:]
+
+                    # self.z = self.z[z_indices].flatten()
+                    # self.xe = self.xe[z_indices].flatten()
+                    # self.Pee = self.Pee[z_indices,:]
+
                 if not just_Pee:
                     self.Pbb = Pbb_file['Pk'][self.skip:]
                     self.Pxx = Pxx_file['Pk'][self.skip:]
@@ -257,13 +288,13 @@ class Cat:
                 self.redshift_keys = self.fetch_redshifts()
 
                 if self.base_dir:
-                    path_ionhistory = f'{self.base_dir}/{path_ionhistory}'
+                    ionhistories_fn = f'{self.base_dir}/{ionhistories_fn}'
 
                 if self.verbose:
                     print('Fetching ionisation history from:')
-                    print(f'\t {path_ionhistory}')
+                    print(f'\t {ionhistories_fn}')
 
-                ion_histories = np.load(path_ionhistory, allow_pickle=True)
+                ion_histories = np.load(ionhistories_fn, allow_pickle=True)
                 ion_histories = ion_histories['arr_0'].item()
                 
                 self.z = ion_histories[self.sim_n]['z']
@@ -372,10 +403,10 @@ class Cat:
     def fetch_redshifts(self):
         if self.verbose:
             print('Fetching redshifts from:')
-            print(f'\t {self.path_redshifts}')
+            print(f'\t {self.redshifts_fn}')
 
         redshift_keys = {}
-        with open(self.path_redshifts) as f:
+        with open(self.redshifts_fn) as f:
                     for line in f:
                         (val, key) = line.split()
                         redshift_keys[key] = float(val)
