@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(description="Load a numpy file which is a list 
 parser.add_argument("--sims", type=str, help="Path to the numpy file (.npy or .npz) with the sims to parse")
 args = parser.parse_args()
 
-redshifts_fn = 'obs/emcbride/redshift_list.dat'
+redshifts_fn = '/obs/emcbride/redshift_list.dat'
 path_spectra = '/obs/emcbride/spectra/Pee'
 path_sim = '/loreli/rmeriot/simus_loreli/' #'/obs/emcbride/sims'  # head folder holding all the simulation cubes
 
