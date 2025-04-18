@@ -116,7 +116,7 @@ class Cat:
             self.z = self.redshift_keys.values()
 
         fn_params = f'runtime_parameters_simulation_{self.sim_n}_reformatted.txt'
-        if (load_params or reinitialise_spectra):
+        if load_params:
             if self.verbose:
                 print("Fetching params...")
             self.params = utils.read_params(f'{self.path_params}/{fn_params}')
