@@ -96,6 +96,7 @@ for sn in sims_num:
                         verbose=True,
                         load_params=False,
                         skip_early=False,
+                        load_spectra=False,
                         reinitialise_spectra=True,
                         save_spectra=True,
                         just_Pee=True,
