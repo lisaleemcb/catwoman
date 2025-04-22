@@ -25,14 +25,12 @@ path_spectra = '/obs/emcbride/spectra/Pee'
 path_sim = '/loreli/rmeriot/simus_loreli/' #'/obs/emcbride/sims'  # head folder holding all the simulation cubes
 
 # load simulations that are already parsed so we can skip
-# skipped = np.load('skipped.npy')
-# written = np.load('written.npy')
+skipped = np.load('skipped.npy')
+written = np.load('written.npy')
 
-# written = written.tolist()
-# skipped = skipped.tolist()
+written = written.tolist()
+skipped = skipped.tolist()
 
-skipped = []
-written = []
 
 print('So far the following simulations have been written out:')
 print(written)
@@ -86,7 +84,7 @@ for sn in sims_num:
             logger_err.warning(f'no params file')
             print('skipping sim {sn}...')
             skipped.append(sn)
-            np.save('skipped.npy', skipped)
+            np.save('skipped2.npy', skipped)
 
             continue 
 
@@ -112,7 +110,7 @@ for sn in sims_num:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
-                np.save('skipped.npy', skipped)
+                np.save('skipped2.npy', skipped)
                 logger_err.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
 
                 continue
@@ -121,7 +119,7 @@ for sn in sims_num:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
-                np.save('skipped.npy', skipped)
+                np.save('skipped2.npy', skipped)
                 logger_err.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
 
                 continue
@@ -130,7 +128,7 @@ for sn in sims_num:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
-                np.save('skipped.npy', skipped)
+                np.save('skipped2.npy', skipped)
                 logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
 
                 continue
@@ -155,7 +153,7 @@ for sn in sims_num:
                 #     continue
 
             written.append(sn)
-            np.save('written.npy', written)
+            np.save('written2.npy', written)
 
             logger.info(f'Sim {sn} saved to disk...')
             print(f'Sim {sn} saved to disk...')
