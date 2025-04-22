@@ -20,13 +20,15 @@ parser = argparse.ArgumentParser(description="Load a numpy file which is a list 
 parser.add_argument("--sims", type=str, help="Path to the numpy file (.npy or .npz) with the sims to parse")
 args = parser.parse_args()
 
+home_dir = 'obs/emcbride'
+
 redshifts_fn = '/obs/emcbride/redshift_list.dat'
 path_spectra = '/obs/emcbride/spectra/Pee'
 path_sim = '/loreli/rmeriot/simus_loreli/' #'/obs/emcbride/sims'  # head folder holding all the simulation cubes
 
 # load simulations that are already parsed so we can skip
-skipped = np.load('skipped.npy')
-written = np.load('written.npy')
+skipped = np.load(f'{home_dir}/skipped.npy')
+written = np.load(f'{home_dir}/written.npy')
 
 written = written.tolist()
 skipped = skipped.tolist()
@@ -84,7 +86,7 @@ for sn in sims_num:
             logger_err.warning(f'no params file')
             print('skipping sim {sn}...')
             skipped.append(sn)
-            np.save('skipped2.npy', skipped)
+            np.save(f'{home_dir}/skipped2.npy', skipped)
 
             continue 
 
@@ -110,7 +112,7 @@ for sn in sims_num:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
-                np.save('skipped2.npy', skipped)
+                np.save(f'{home_dir}/skipped2.npy', skipped)
                 logger_err.warning(f'No snapshot files at {snapshots_file}...skipping sim {sn}')
 
                 continue
@@ -119,7 +121,7 @@ for sn in sims_num:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
-                np.save('skipped2.npy', skipped)
+                np.save(f'{home_dir}/skipped2.npy', skipped)
                 logger_err.warning(f'No density cubes at {sim.path_density}...skipping sim {sn} initialisation')
 
                 continue
@@ -128,7 +130,7 @@ for sn in sims_num:
                 err_file = os.path.join(log_dir, f'simu{sn}.missingfiles.failed')
                 logger_err = utils.setup_logger(logger_name, err_file)
                 skipped.append(sn)
-                np.save('skipped2.npy', skipped)
+                np.save(f'{home_dir}/skipped2.npy', skipped)
                 logger_err.warning(f'No xion cubes at {sim.path_xion}...skipping sim {sn} initialisation')
 
                 continue
@@ -153,7 +155,7 @@ for sn in sims_num:
                 #     continue
 
             written.append(sn)
-            np.save('written2.npy', written)
+            np.save(f'{home_dir}/written2.npy', written)
 
             logger.info(f'Sim {sn} saved to disk...')
             print(f'Sim {sn} saved to disk...')
