@@ -55,6 +55,10 @@ for sn in sims_num:
     print('-----------------------------------------------------------')
     print(f'Now on sim {sn}...')
 
+    if os.path.exists(f"{path_spectra}/simu{sn}_Pee_spectra.npz"):
+        print('File already exists')
+        continue
+
     logger_name = f'logger_{sn}'
     log_file = os.path.join(log_dir, f'simu{sn}.log')
     logger = utils.setup_logger(logger_name, log_file)
