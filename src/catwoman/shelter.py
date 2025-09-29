@@ -125,13 +125,13 @@ class Cat:
             self.params = utils.read_params(f'{self.path_params}/{fn_params}')
 
         if (load_xion_cubes or reinitialise_spectra):
-            self.xion = self.load_xion_cubes(f'{self.path_xion_cubes}/xion_256_out{n}.dat')
+            self.xion = self.load_cubes(self.path_xion_cube, 'xion_256_out')
 
         if (load_density_cubes or reinitialise_spectra):
-            self.density = self.load_cubes(f'{self.path_density_cubes}/dens_256_out{n}.dat')
+            self.density = self.load_cubes(self.path_density_cubes, 'dens_256_out')
 
         if (load_21cm_cubes or reinitialise_spectra):
-            self.T21cm = self.load_cubes(f'{self.path_21cm_cubes}/dtb_tp_hi_256_nocorrection_out{n}.dat')
+            self.T21cm = self.load_cubes(self.path_21cm_cubes, 'dtb_tp_hi_256_nocorrection_out')
 
         if reinitialise_spectra:
             if pspec_kwargs is None:
@@ -421,7 +421,7 @@ class Cat:
         return redshift_keys
 
 
-    def load_cubes(self, filename, nbins=512):
+    def load_cubes(self, filename, ext, nbins=512):
         if self.verbose:
             print("Fetching density cubes...")
 
@@ -432,6 +432,8 @@ class Cat:
 
             # if self.verbose:
             #     print(f'Now reading in density box from from {filename}')
+            #
+            filename = f"{filename}/{ext}{n}.dat"
 
             if not os.path.isfile(filename):
                 raise FileNotFoundError(filename)
