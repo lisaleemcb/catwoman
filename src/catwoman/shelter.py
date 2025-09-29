@@ -27,6 +27,7 @@ class Cat:
                 load_spectra=True,
                 load_xion_cubes=False,
                 load_density_cubes=False,
+                load_21cm_cubes=False,
                 reinitialise_spectra=False,
                 use_LoReLi_xe=False,
                 save_spectra=False,
@@ -45,7 +46,7 @@ class Cat:
                             0.4475445, 0.5709843, 0.7276318, 0.9274267, 1.1823019, 1.5068212,
                             1.9204267, 2.4476898]),
                 debug=False):
-    
+
         self.sim_n = sim_n
         self.base_dir = base_dir
         self.path_sim = path_sim
@@ -72,7 +73,7 @@ class Cat:
                 self.path_params = path_params
             else:
                 self.path_params = f'{self.path_sim}/simu{self.sim_n}'
-            
+
             if self.base_dir:
                 self.path_params = f'{self.base_dir}/{self.path_params}'
 
@@ -90,6 +91,8 @@ class Cat:
             self.path_density_cubes = path_density_cubes
         else:
             self.path_density_cubes = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens'
+
+        self.path_21cm_cubes = f'{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dtb'
 
         if self.base_dir:
             self.redshifts_fn = f'{self.base_dir}/{self.redshifts_fn}'
@@ -122,10 +125,13 @@ class Cat:
             self.params = utils.read_params(f'{self.path_params}/{fn_params}')
 
         if (load_xion_cubes or reinitialise_spectra):
-            self.xion = self.load_xion_cubes()
+            self.xion = self.load_xion_cubes(f'{self.path_xion_cubes}/xion_256_out{n}.dat')
 
         if (load_density_cubes or reinitialise_spectra):
-            self.density = self.load_density_cubes()
+            self.density = self.load_cubes(f'{self.path_density_cubes}/dens_256_out{n}.dat')
+
+        if (load_21cm_cubes or reinitialise_spectra):
+            self.T21cm = self.load_cubes(f'{self.path_21cm_cubes}/dtb_tp_hi_256_nocorrection_out{n}.dat')
 
         if reinitialise_spectra:
             if pspec_kwargs is None:
@@ -135,7 +141,7 @@ class Cat:
                                     'bin_ave': True}
             else:
                 self.pspec_kwargs = pspec_kwargs
-            
+
             if self.verbose:
                 print('')
                 print(f'Simulation runs from z={max(list(self.z))} to z={min(list(self.z))}')
@@ -161,7 +167,7 @@ class Cat:
 
                 if save_spectra:
                     self.Pee_spectra_path = f"{path_spectra}/simu{self.sim_n}_Pee_spectra.npz"
-                    
+
                     if self.verbose:
                         print('Saving power spectra...')
                         print(f'   Pee path: {self.Pee_spectra_path}')
@@ -198,12 +204,12 @@ class Cat:
         if load_spectra:
             if LoReLi_format:
                 self.Pee_spectra_path  = f'{self.path_spectra}/simu{self.sim_n}/postprocessing/cubes/ps_dtb'
-            else: 
+            else:
                 self.Pee_spectra_path = f'{self.path_spectra}/Pee/simu{self.sim_n}_Pee_spectra.npz'
 
             if self.base_dir:
                 self.Pee_spectra_path = f'{self.base_dir}/{self.Pee_spectra_path}'
-                                        
+
             if not os.path.exists(self.Pee_spectra_path):
                 raise FileNotFoundError(f"The file '{self.Pee_spectra_path}' does not exist.{os.linesep}Rerun with reinitialise_spectra=True and save_spectra=True.")
 
@@ -217,28 +223,28 @@ class Cat:
 
                     if not os.path.exists(self.Pbb_spectra_path):
                             raise FileNotFoundError(f"The file '{self.Pbb_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
-                    
+
                     if not os.path.exists(self.Pxx_spectra_path):
                             raise FileNotFoundError(f"The file '{self.Pxx_spectra_path}' does not exist. \nRerun with reinitialise_spectra=True and save_spectra=True.")
 
-            if self.verbose:   
+            if self.verbose:
                 print('Loading the follow spectra from:')
                 print(f'\tPee: {self.Pee_spectra_path}')
                 if not just_Pee:
                     print(f'\tPbb: {self.Pbb_spectra_path}')
                     print(f'\tPxx: {self.Pxx_spectra_path}')
 
-            if not LoReLi_format: 
+            if not LoReLi_format:
                 if self.verbose:
                     print('')
                     print('Loading precalculated spectra (from cubes). If you would like fresh spectra, rerun with reinitialise_spectra=True')
-                    print('')  
+                    print('')
 
                 Pee_file = np.load(self.Pee_spectra_path)
                 if not just_Pee:
                     Pbb_file = np.load(self.Pbb_spectra_path)
                     Pxx_file = np.load(self.Pxx_spectra_path)
-                
+
                 self.k = Pee_file['k']
                 self.xe = Pee_file['xe']
                 if self.skip_early:
@@ -258,7 +264,7 @@ class Cat:
 
                     ion_histories = np.load(ionhistories_fn, allow_pickle=True)
                     ion_histories = ion_histories['arr_0'].item()
-                
+
                     z_LoReLi = ion_histories[self.sim_n]['z']
                     xe_LoReLi = ion_histories[self.sim_n]['xe']
 
@@ -267,7 +273,7 @@ class Cat:
                     matches = np.where(diff <= tol)
 
 # matches[0] are indices in `a`, matches[1] are corresponding indices in `b`
-                    
+
                     self.z = z_LoReLi[matches[0]]
                     self.xe = xe_LoReLi[matches[0]]
                     self.Pee = self.Pee[matches[1],:]
@@ -279,7 +285,7 @@ class Cat:
                 if not just_Pee:
                     self.Pbb = Pbb_file['Pk'][self.skip:]
                     self.Pxx = Pxx_file['Pk'][self.skip:]
-            
+
             elif LoReLi_format:
                 if self.verbose:
                     print('')
@@ -297,14 +303,14 @@ class Cat:
 
                 ion_histories = np.load(ionhistories_fn, allow_pickle=True)
                 ion_histories = ion_histories['arr_0'].item()
-                
+
                 self.z = ion_histories[self.sim_n]['z']
                 self.xe = ion_histories[self.sim_n]['xe']
 
                 if self.debug:
                     print(f'ionisation fraction is:')
                     print(f'\t xe={self.xe}')
-                    
+
                 spectra = []
                 z_indices = []
                 #   print(f'redshift are: \n \t{self.z}')
@@ -319,7 +325,7 @@ class Cat:
                         if self.debug:
                             print(f'key: {key}, redshift: {self.redshift_keys[key]}, zrounded: {keyz_rounded}')
                             print(f'match: {match}')
-                    
+
                         if len(match) > 0:
                             self.which_keys.append(key)
                             index = match[0]
@@ -339,7 +345,7 @@ class Cat:
 
                 if spectra:
                     self.k = spectra[0][:,0]
-                    
+
                     #print(f'Indices: {z_indices}')
                     self.z = self.z[z_indices].flatten()
                     self.xe = self.xe[z_indices].flatten()
@@ -357,11 +363,11 @@ class Cat:
                         self.skip = utils.find_index(self.xe) # to pick out monotonically increasing xe only
                     else:
                         self.skip = 0
-                    
+
                     self.z = self.z[self.skip:]
                     self.xe = self.xe[self.skip:]
                     self.Pee = self.Pee[self.skip:]
-        
+
                     if not just_Pee:
                         pass
                     # self.Pbb = Pbb_file['Pk'][self.skip:]
@@ -397,7 +403,7 @@ class Cat:
         params['sim_n'] = self.sim_n
 
         return params
-    
+
     def Delta2(self):
         return (self.k**3 / (2.0 * np.pi**2)) * self.Pee
 
@@ -414,66 +420,34 @@ class Cat:
 
         return redshift_keys
 
-    def load_xion_cubes(self, nbins=512):
-        if self.verbose:
-            print("Fetching xion cubes...")
 
-        xion_list = []
-        for n in self.file_nums:
-            # if self.verbose:
-            #     print(f'Now on file {n}')
-
-            xion_file = f'{self.path_xion_cubes}/xion_256_out{n}.dat'
-
-            # if self.verbose:
-            #     print(f'Now reading in xion box from from {xion_file}')
-
-            if not os.path.isfile(xion_file):
-                raise FileNotFoundError(xion_file)
-            if os.path.isfile(xion_file):
-                xion = utils.read_cube(xion_file)
-
-                z = 0
-                if n in self.redshift_keys.keys():
-                    z = self.redshift_keys[n]
-
-                    xion_dict = {'file_n': n,
-                                'z': float(z),
-                                'cube': xion}
-
-                    xion_list.append(xion_dict)
-
-        return xion_list
-
-    def load_density_cubes(self, nbins=512):
+    def load_cubes(self, filename, nbins=512):
         if self.verbose:
             print("Fetching density cubes...")
 
-        density_list = []
+        cube_list = []
         for n in self.file_nums:
             # if self.verbose:
             #    print(f'Now on file {n}')
 
-            density_file = f'{self.path_density_cubes}/dens_256_out{n}.dat'
-
             # if self.verbose:
-            #     print(f'Now reading in density box from from {density_file}')
+            #     print(f'Now reading in density box from from {filename}')
 
-            if not os.path.isfile(density_file):
-                raise FileNotFoundError(density_file)
-            if os.path.isfile(density_file):
-                density_cube = utils.read_cube(density_file)
+            if not os.path.isfile(filename):
+                raise FileNotFoundError(filename)
+            if os.path.isfile(filename):
+                cube = utils.read_cube(filename)
                 z = 0
                 if n in self.redshift_keys.keys():
                     z = self.redshift_keys[n]
-                    cube = utils.convert_density(density_cube, z)
+                    cube = utils.convert_density(cube, z)
 
-                    density_dict = {'file_n': n,
+                    dict = {'file_n': n,
                                 'z': float(z),
                                 'cube': cube}
-                    density_list.append(density_dict)
+                    cube_list.append(dict)
 
-        return density_list
+        return cube_list
 
     def calc_ion_history(self):
         if self.verbose:
