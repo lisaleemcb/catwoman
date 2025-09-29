@@ -111,7 +111,7 @@ class Cat:
                 print(f'\tdensity cubes: {self.path_density_cubes}')
                 print('')
 
-        if (load_xion_cubes or load_density_cubes or reinitialise_spectra):
+        if (load_xion_cubes or load_density_cubes or load_21cm_cubes or reinitialise_spectra):
             if self.verbose:
                 print("Fetching reference files...")
             self.file_nums = self.gen_filenums()
