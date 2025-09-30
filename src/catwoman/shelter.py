@@ -163,7 +163,7 @@ class Cat:
             self.params = utils.read_params(f"{self.path_params}/{fn_params}")
 
         if load_xion_cubes or reinitialise_spectra:
-            self.xion = self.load_cubes(self.path_xion_cube, "xion_256_out")
+            self.xion = self.load_cubes(self.path_xion_cubes, "xion_256_out")
 
         if load_density_cubes or reinitialise_spectra:
             self.density = self.load_cubes(self.path_density_cubes, "dens_256_out")
