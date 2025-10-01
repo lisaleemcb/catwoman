@@ -175,7 +175,7 @@ class Cat:
                 self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out"
             )
 
-        if self.xion:  # this just checks that the data cubes exist
+        if self.xion is not None:  # this just checks that the data cubes exist
             self.z, self.xe = self.calc_ion_history()
 
         if reinitialise_spectra:
@@ -204,7 +204,7 @@ class Cat:
                 print(f"Power spectrum settings:")
                 print(f"\t{self.pspec_kwargs}")
 
-            if self.xion:  # this just checks that the data cubes exist
+            if self.xion is not None:  # this just checks that the data cubes exist
                 if self.verbose:
                     print("")
                     print(
