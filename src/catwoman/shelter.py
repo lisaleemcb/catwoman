@@ -125,7 +125,7 @@ class Cat:
                 f"{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dens"
             )
 
-        self.path_21cm_cubes = (
+        self.path_T21cm_cubes = (
             f"{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dtb"
         )
 
@@ -149,7 +149,7 @@ class Cat:
         if (
             load_xion_cubes
             or load_density_cubes
-            or load_21cm_cubes
+            or load_T21cm_cubes
             or reinitialise_spectra
         ):
             if self.verbose:
@@ -170,9 +170,9 @@ class Cat:
         if load_density_cubes or reinitialise_spectra:
             self.density = self.load_cubes(self.path_density_cubes, "dens_256_out")
 
-        if load_21cm_cubes:
+        if load_T21cm_cubes:
             self.T21cm = self.load_cubes(
-                self.path_21cm_cubes, "dtb_tp_hi_256_nocorrection_out"
+                self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out"
             )
 
         if self.xion:  # this just checks that the data cubes exist
