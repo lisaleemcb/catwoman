@@ -550,7 +550,7 @@ class Cat:
                     dict = {"file_n": n, "z": float(z), "cube": cube}
                     cube_list.append(dict)
 
-        cubes = np.zeros((self.z.size, *cube.shape))
+        cubes = np.zeros((len(cube_list), *cube.shape))
         for i, c in enumerate(cube_list):
             cubes[i] = c["cube"]
 
