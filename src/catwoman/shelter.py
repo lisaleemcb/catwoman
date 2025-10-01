@@ -31,7 +31,7 @@ class Cat:
         load_spectra=True,
         load_xion_cubes=False,
         load_density_cubes=False,
-        load_21cm_cubes=False,
+        load_T21cm_cubes=False,
         reinitialise_spectra=False,
         use_LoReLi_xe=False,
         save_spectra=False,
@@ -170,12 +170,22 @@ class Cat:
         if load_density_cubes or reinitialise_spectra:
             self.density = self.load_cubes(self.path_density_cubes, "dens_256_out")
 
-        if load_21cm_cubes or reinitialise_spectra:
+        if load_21cm_cubes:
             self.T21cm = self.load_cubes(
                 self.path_21cm_cubes, "dtb_tp_hi_256_nocorrection_out"
             )
 
+        if self.xion:  # this just checks that the data cubes exist
+            self.z, self.xe = self.calc_ion_history()
+
         if reinitialise_spectra:
+            if self.verbose:
+                print("")
+                print(
+                    "Initialising spectra since you asked so nicely! But this could take a while..."
+                )
+                print("")
+
             if pspec_kwargs is None:
                 self.pspec_kwargs = {
                     "bins": np.geomspace(self.k_res[0], self.k_res[1], 21),
