@@ -87,6 +87,10 @@ class Cat:
             (2 * np.pi * 256) / self.box_size / 2,
         )
 
+        self.density = None
+        self.xion = None
+        self.T21cm = None
+
         if self.verbose:
             print(f"==============================")
             print(f"Loading sim number {sim_n}...")
@@ -211,17 +215,12 @@ class Cat:
                         "Initialising spectra since you asked so nicely! But this could take a while..."
                     )
                     print("")
-                self.Pee_dict = self.calc_Pee()
+                self.Pee, self.k = self.calculate_power(self.density)
                 if not just_Pee:
-                    self.Pbb_dict = self.calc_Pbb()
-                    self.Pxx_dict = self.calc_Pxx()
+                    self.Pbb, self.k = self.calculate_power(self.density)
+                    self.Pxx, self.k = self.calculate_power(self.xion)
 
-                self.z, self.xe = self.calc_ion_history()
-                self.k = self.Pee_dict[0]["k"]
-                self.Pee = utils.unpack_data(self.Pee_dict)
-                if not just_Pee:
-                    self.Pbb = utils.unpack_data(self.Pbb_dict)
-                    self.Pxx = utils.unpack_data(self.Pxx_dict)
+                self.xe = np.mean(self.xion, axis=0)
 
                 if save_spectra:
                     self.Pee_spectra_path = (
@@ -527,7 +526,7 @@ class Cat:
 
         return redshift_keys
 
-    def load_cubes(self, fn, ext, nbins=512):
+    def load_cubes(self, fn, ext, nbins=512, density=False):
         """
 
         :param fn:
@@ -538,7 +537,7 @@ class Cat:
         if self.verbose:
             print("Fetching density cubes...")
 
-        cube_list = []
+        cubes_list = []
         for n in self.file_nums:
             # if self.verbose:
             #    print(f'Now on file {n}')
@@ -555,18 +554,21 @@ class Cat:
                 z = 0
                 if n in self.redshift_keys.keys():
                     z = self.redshift_keys[n]
-                    cube = utils.convert_density(cube, z)
+                    if density:
+                        cube = utils.convert_density(cube, z)
 
                     dict = {"file_n": n, "z": float(z), "cube": cube}
-                    cube_list.append(dict)
+                    cubes_list.append(dict)
 
-        cubes = np.zeros((len(cube_list), *cube.shape))
-        for i, c in enumerate(cube_list):
+        z = np.zeros(len(cubes_list))
+        cubes = np.zeros((len(cubes_list), *cubes_list[0]["cube"].shape))
+        for i, c in enumerate(cubes_list):
+            z[i] = c["z"]
             cubes[i] = c["cube"]
 
-        return cubes
+        return cubes, z
 
-    def calc_ion_history(self):
+    def calc_ionhistory(self):
         """ """
         if self.verbose:
             print(f"Calculating ionisation history...")
@@ -588,84 +590,7 @@ class Cat:
 
         return np.asarray(z), np.asarray(xe)
 
-    def calc_Pee(self, k=None):
-        """
-
-        :param k:  (Default value = None)
-
-        """
-        Pee_list = []
-        for i, den in enumerate(self.density):
-            if self.verbose:
-                print(f"Calculating electron power spectrum at redshift {den['z']}")
-
-            file_n = den["file_n"]
-            z = den["z"]
-            den_cube = den["cube"]
-            xion_cube = 0  # this is to increase the scope of the variable
-            if self.xion[i]["file_n"] == file_n:
-                xion = self.xion[i]
-                xion_cube = xion["cube"]
-
-            if self.xion[i]["file_n"] != file_n:
-                raise Exception("The file numbers don't match")
-
-            delta = (den_cube - np.mean(den_cube)) / np.mean(den_cube)
-            ne = xion_cube * (1 + delta)
-            ne_overdensity = (ne - np.mean(ne)) / np.mean(ne)
-
-            pk = 0
-            bins = 0
-            if k is not None:
-                if self.verbose:
-                    print("Using the k values you asked for")
-                pk, bins = get_power(ne_overdensity, self.box_size, **self.pspec_kwargs)
-
-            if k is None:
-                pk, bins = get_power(ne_overdensity, self.box_size, **self.pspec_kwargs)
-
-            Pee_dict = {"file_n": file_n, "z": z, "k": bins, "P_k": pk}
-            Pee_list.append(Pee_dict)
-
-        if self.verbose:
-            print("")
-
-        return Pee_list
-
-    def calc_Pbb(self, k=None):
-        """
-
-        :param k:  (Default value = None)
-
-        """
-        Pbb_list = []
-        for i, den in enumerate(self.density):
-            if self.verbose:
-                print(f"Calculating matter power spectrum at redshift {den['z']}")
-
-            file_n = den["file_n"]
-            z = den["z"]
-            den_cube = den["cube"]
-
-            delta = (den_cube - np.mean(den_cube)) / np.mean(den_cube)
-            pk = 0
-            bins = 0
-            if k is not None:
-                if self.verbose:
-                    print("Using the k values you asked for")
-                pk, bins = get_power(delta, self.box_size, **self.pspec_kwargs)
-
-            if k is None:
-                pk, bins = get_power(delta, self.box_size, **self.pspec_kwargs)
-            Pbb_dict = {"file_n": file_n, "z": z, "k": bins, "P_k": pk}
-            Pbb_list.append(Pbb_dict)
-
-        if self.verbose:
-            print("")
-
-        return Pbb_list
-
-    def calc_Pxx(self, k=None, n_bins=25, log_bins=True):
+    def calculate_power(self, cubes, k=None, n_bins=25, log_bins=True, type="the"):
         """
 
         :param k:  (Default value = None)
@@ -673,35 +598,29 @@ class Cat:
         :param log_bins:  (Default value = True)
 
         """
-        Pxx_list = []
-        for i, xion in enumerate(self.xion):
+        P_k = np.zeros((self.z.size, n_bins))
+        bins = np.zeros(n_bins)
+        for i, z in enumerate(self.z):
             if self.verbose:
-                print(f"Calculating ionisation power spectrum at redshift {xion['z']}")
+                print(f"Calculating {type} power spectrum at redshift {z}")
 
-            file_n = xion["file_n"]
-            z = xion["z"]
-            xion_cube = xion["cube"]
+            field = cubes[i]
+            overdensity = (field - np.mean(field)) / np.mean(field)
 
-            xion_overdensity = (xion_cube - np.mean(xion_cube)) / np.mean(xion_cube)
+            if type == "ion":
+                ne = self.xion[i] * (1 + overdensity)
+                overdensity = (ne - np.mean(ne)) / np.mean(ne)
 
             pk = 0
             bins = 0
             if k is not None:
                 if self.verbose:
                     print("Using the k values you asked for")
-                pk, bins = get_power(
-                    xion_overdensity, self.box_size, **self.pspec_kwargs
-                )
+                pk, bins = get_power(overdensity, self.box_size, **self.pspec_kwargs)
 
             if k is None:
-                pk, bins = get_power(
-                    xion_overdensity, self.box_size, **self.pspec_kwargs
-                )
+                pk, bins = get_power(overdensity, self.box_size, **self.pspec_kwargs)
 
-                Pxx_dict = {"file_n": file_n, "z": z, "k": bins, "P_k": pk}
-                Pxx_list.append(Pxx_dict)
+            P_k[i] = pk
 
-        if self.verbose:
-            print("")
-
-        return Pxx_list
+        return P_k, bins
