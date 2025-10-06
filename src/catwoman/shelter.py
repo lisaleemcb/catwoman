@@ -184,7 +184,8 @@ class Cat:
             )
 
         if self.xion is not None:  # this just checks that the data cubes exist
-            self.xe = np.mean(self.xion)
+            print("Calculating ionisation history...")
+            self.xe = np.mean(self.xion, axis=(1, 2, 3))
         if reinitialise_spectra:
             if self.verbose:
                 print("")
@@ -224,8 +225,6 @@ class Cat:
                         self.density, type="density"
                     )
                     self.Pxx, self.k = self.calculate_power(self.xion, type="xion")
-
-                self.xe = np.mean(self.xion, axis=(1, 2, 3))
 
                 if save_spectra:
                     self.Pee_spectra_path = (
