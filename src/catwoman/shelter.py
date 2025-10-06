@@ -169,19 +169,22 @@ class Cat:
             self.params = utils.read_params(f"{self.path_params}/{fn_params}")
 
         if load_xion_cubes or reinitialise_spectra:
-            self.xion = self.load_cubes(self.path_xion_cubes, "xion_256_out")
+            self.xion, self.z = self.load_cubes(
+                self.path_xion_cubes, "xion_256_out", type="xion"
+            )
 
         if load_density_cubes or reinitialise_spectra:
-            self.density = self.load_cubes(self.path_density_cubes, "dens_256_out")
+            self.density, self.z = self.load_cubes(
+                self.path_density_cubes, "dens_256_out", type="density"
+            )
 
         if load_T21cm_cubes:
-            self.T21cm = self.load_cubes(
-                self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out"
+            self.T21cm, self.z = self.load_cubes(
+                self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out", type="T21cm"
             )
 
         if self.xion is not None:  # this just checks that the data cubes exist
-            self.z, self.xe = self.calc_ion_history()
-
+            self.xe = np.mean(self.xion)
         if reinitialise_spectra:
             if self.verbose:
                 print("")
@@ -215,12 +218,14 @@ class Cat:
                         "Initialising spectra since you asked so nicely! But this could take a while..."
                     )
                     print("")
-                self.Pee, self.k = self.calculate_power(self.density)
+                self.Pee, self.k = self.calculate_power(self.density, type="electron")
                 if not just_Pee:
-                    self.Pbb, self.k = self.calculate_power(self.density)
-                    self.Pxx, self.k = self.calculate_power(self.xion)
+                    self.Pbb, self.k = self.calculate_power(
+                        self.density, type="density"
+                    )
+                    self.Pxx, self.k = self.calculate_power(self.xion, type="xion")
 
-                self.xe = np.mean(self.xion, axis=0)
+                self.xe = np.mean(self.xion, axis=(1, 2, 3))
 
                 if save_spectra:
                     self.Pee_spectra_path = (
@@ -526,7 +531,7 @@ class Cat:
 
         return redshift_keys
 
-    def load_cubes(self, fn, ext, nbins=512, density=False):
+    def load_cubes(self, fn, ext, type="simulation", nbins=512):
         """
 
         :param fn:
@@ -535,7 +540,7 @@ class Cat:
 
         """
         if self.verbose:
-            print("Fetching density cubes...")
+            print(f"Fetching {type} cubes...")
 
         cubes_list = []
         for n in self.file_nums:
@@ -554,7 +559,7 @@ class Cat:
                 z = 0
                 if n in self.redshift_keys.keys():
                     z = self.redshift_keys[n]
-                    if density:
+                    if type == "density":
                         cube = utils.convert_density(cube, z)
 
                     dict = {"file_n": n, "z": float(z), "cube": cube}
@@ -607,7 +612,7 @@ class Cat:
             field = cubes[i]
             overdensity = (field - np.mean(field)) / np.mean(field)
 
-            if type == "ion":
+            if type == "electron":
                 ne = self.xion[i] * (1 + overdensity)
                 overdensity = (ne - np.mean(ne)) / np.mean(ne)
 
