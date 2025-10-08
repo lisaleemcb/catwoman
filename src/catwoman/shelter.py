@@ -142,14 +142,6 @@ class Cat:
                 print("Fetching params from:")
                 print(f"\tparams: {self.path_params}")
                 print("")
-            if load_xion_cubes:
-                print("Fetching xion cubes from:")
-                print(f"\tionisation cubes: {self.path_xion_cubes}")
-                print("")
-            if load_density_cubes:
-                print("Fetching density cubes from:")
-                print(f"\tdensity cubes: {self.path_density_cubes}")
-                print("")
 
         if (
             load_xion_cubes
@@ -183,6 +175,8 @@ class Cat:
             self.T21cm, self.z = self.load_cubes(
                 self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out", type="T21cm"
             )
+
+        self.xe, self.z = get_ionhistory()
 
         if reinitialise_spectra:
             if self.verbose:
@@ -535,7 +529,9 @@ class Cat:
 
         """
         if self.verbose:
-            print(f"Fetching {type} cubes...")
+            print(f"Fetching {type} cubes from:")
+            print(f"\t path: {self.path_xion_cubes}")
+            print("")
 
         cubes_list = []
         for n in self.file_nums:
