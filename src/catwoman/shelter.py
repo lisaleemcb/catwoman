@@ -77,6 +77,7 @@ class Cat:
         self.redshifts_fn = redshifts_fn
         self.path_spectra = path_spectra
         self.use_LoReLi_xe = use_LoReLi_xe
+        self.ionhistories_fn = ionhistories_fn
         self.verbose = verbose
         self.skip_early = skip_early
         self.debug = debug
@@ -98,7 +99,7 @@ class Cat:
 
         if load_spectra and reinitialise_spectra:
             raise ValueError(
-                "Both load_spectra and reinitialise_spectra can be set to true."
+                "Both load_spectra and reinitialise_spectra cannot be set to true."
             )
 
         if load_params:
@@ -183,9 +184,6 @@ class Cat:
                 self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out", type="T21cm"
             )
 
-        if self.xion is not None:  # this just checks that the data cubes exist
-            print("Calculating ionisation history...")
-            self.xe = np.mean(self.xion, axis=(1, 2, 3))
         if reinitialise_spectra:
             if self.verbose:
                 print("")
@@ -366,8 +364,7 @@ class Cat:
                     ion_histories = np.load(ionhistories_fn, allow_pickle=True)
                     ion_histories = ion_histories["arr_0"].item()
 
-                    z_LoReLi = ion_histories[self.sim_n]["z"]
-                    xe_LoReLi = ion_histories[self.sim_n]["xe"]
+                    xe_LoReLi, z_LoReLi = self.get_ionhistory(interpolate=False)
 
                     tol = 0.01  # tolerance
                     diff = np.abs(z_LoReLi[:, None] - self.z[None, :])
@@ -407,8 +404,7 @@ class Cat:
                 ion_histories = np.load(ionhistories_fn, allow_pickle=True)
                 ion_histories = ion_histories["arr_0"].item()
 
-                self.z = ion_histories[self.sim_n]["z"]
-                self.xe = ion_histories[self.sim_n]["xe"]
+                self.xe, self.z = self.get_ionhistory(interpolate=False)
 
                 if self.debug:
                     print(f"ionisation fraction is:")
@@ -572,27 +568,25 @@ class Cat:
 
         return cubes, z
 
-    def calc_ionhistory(self):
+    def get_ionhistory(self, interpolate=False, z_interp=None):
         """ """
-        if self.verbose:
-            print(f"Calculating ionisation history...")
-
-        z = []
-        xe = []
-        for slice in self.xion:
-            # if self.verbose:
-            #    print(f'Now on file {n}')
+        if self.xion:
             if self.verbose:
-                print(f"Calculating ionisation fraction at redshift {slice['z']}")
+                print(f"Calculating ionisation history from boxes...")
+                return np.mean(self.xion, axis=(1, 2, 3))
 
-            cube = slice["cube"]
-            z.append(slice["z"])
-            xe.append(np.mean(cube))
+        if not self.xion:
+            if self.verbose:
+                print(f"No ion box available, loading ionisation history from file...")
 
-        if self.verbose:
-            print("")
+            fn = f"{self.base_dir}/{self.ionhistories_fn}"
+            ion_histories = np.load(fn, allow_pickle=True)
+            ion_histories = ion_histories["arr_0"].item()
 
-        return np.asarray(z), np.asarray(xe)
+            z = ion_histories[self.sim_n]["z"]
+            xe = ion_histories[self.sim_n]["xe"]
+
+            return np.asarray(xe), np.asarray(z)
 
     def calculate_power(self, cubes, k=None, n_bins=25, log_bins=True, type="the"):
         """
