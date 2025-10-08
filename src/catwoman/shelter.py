@@ -176,7 +176,7 @@ class Cat:
                 self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out", type="T21cm"
             )
 
-        self.xe, self.z = get_ionhistory()
+        self.xe, self.z = self.get_ionhistory()
 
         if reinitialise_spectra:
             if self.verbose:
