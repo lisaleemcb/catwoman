@@ -566,12 +566,12 @@ class Cat:
 
     def get_ionhistory(self, interpolate=False, z_interp=None):
         """ """
-        if self.xion:
+        if self.xion is not None:
             if self.verbose:
                 print(f"Calculating ionisation history from boxes...")
                 return np.mean(self.xion, axis=(1, 2, 3))
 
-        if not self.xion:
+        if self.xion is None:
             if self.verbose:
                 print(f"No ion box available, loading ionisation history from file...")
 
