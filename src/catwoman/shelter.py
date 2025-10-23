@@ -19,12 +19,56 @@ _logger = logging.getLogger(__name__)
 
 
 class Cat:
-    """ """
+    """
+    A class for loading a LoReLi simulation.
+
+        Parameters
+        ----------
+        sim_n : str
+            Simulation number
+        pspec_kwargs=None,
+        skip_early=True,
+        load_params : bool
+            Whether to load parameter dictionary
+        load_spectra : bool
+            Whether to load power spectrum
+        load_xion_cubes : bool
+            Whether to load ionisation field cubes
+        load_density_cubes : bool
+            Whether to load density field cubes
+        load_T21cm_cubes : bool
+            Whether to load 21cm brightness temperature cubes
+        reinitialise_spectra : bool
+            Whether to recalculate spectra from cubes
+        use_LoReLi_xe=False,
+        save_spectra=False,
+        just_Pee=True,
+        LoReLi_format=False,
+        redshifts_fn="metadata/redshift_list.dat",
+        ionhistories_fn="metadata/ion_histories_full.npz",
+        base_dir="/Users/emcbride/Datasets/LoReLi",
+        path_sim="Datasets/LoReLi",
+        path_params="metadata/param_files",
+        path_spectra="ps_ee",
+        path_xion_cubes=None,
+        path_density_cubes=None,
+        k : Fourier modes of spectra
+        verbose=False,
+        debug=False
+
+        Attributes
+        ----------
+        name : str
+            The name of the dog.
+        age : int
+            The age of the dog in years.
+        species : str
+            The species of the animal (always 'Canine').
+    """
 
     def __init__(
         self,
         sim_n,
-        verbose=False,
         pspec_kwargs=None,
         skip_early=True,
         load_params=False,
@@ -45,30 +89,8 @@ class Cat:
         path_spectra="ps_ee",
         path_xion_cubes=None,
         path_density_cubes=None,
-        k=np.array(
-            [
-                0.021227,
-                0.0300195,
-                0.0392038,
-                0.0497301,
-                0.0659062,
-                0.0834707,
-                0.1051155,
-                0.132222,
-                0.1692068,
-                0.2162669,
-                0.2754583,
-                0.3508495,
-                0.4475445,
-                0.5709843,
-                0.7276318,
-                0.9274267,
-                1.1823019,
-                1.5068212,
-                1.9204267,
-                2.4476898,
-            ]
-        ),
+        k=None,
+        verbose=False,
         debug=False,
     ):
         self.sim_n = sim_n
@@ -78,8 +100,8 @@ class Cat:
         self.path_spectra = path_spectra
         self.use_LoReLi_xe = use_LoReLi_xe
         self.ionhistories_fn = ionhistories_fn
-        self.verbose = verbose
         self.skip_early = skip_early
+        self.verbose = verbose
         self.debug = debug
 
         self.box_size = 296.0  # Mpc
@@ -480,7 +502,22 @@ class Cat:
             print("")
 
     def gen_filenums(self):
-        """ """
+        """
+        Pull lists of filenumbers
+
+        Parameters
+        ----------
+        arg1 : int
+            The first number to add.
+        arg2 : int
+            The second number to add.
+
+        Returns
+        -------
+        arr
+            File numbers in sorted order
+
+        """
         file_nums = []
         for filename in os.listdir(f"{self.path_xion_cubes}"):
             basename, extension = os.path.splitext(filename)
@@ -584,16 +621,19 @@ class Cat:
 
             return np.asarray(xe), np.asarray(z)
 
-    def calculate_power(self, cubes, k=None, n_bins=25, log_bins=True, type="the"):
+    def calculate_power(self, cubes, log_bins=True, type="the"):
         """
-
+        "bins": np.geomspace(self.k_res[0], self.k_res[1], 21),
+        "log_bins": True,
+        "get_variance": False,
+        "bin_ave": True,
         :param k:  (Default value = None)
         :param n_bins:  (Default value = 25)
         :param log_bins:  (Default value = True)
 
         """
-        P_k = np.zeros((self.z.size, n_bins))
-        bins = np.zeros(n_bins)
+        P_k = []
+        bins = None
         for i, z in enumerate(self.z):
             if self.verbose:
                 print(f"Calculating {type} power spectrum at redshift {z}")
@@ -607,7 +647,7 @@ class Cat:
 
             pk = 0
             bins = 0
-            if k is not None:
+            if self.k is not None:
                 if self.verbose:
                     print("Using the k values you asked for")
                 pk, bins = get_power(overdensity, self.box_size, **self.pspec_kwargs)
@@ -615,6 +655,12 @@ class Cat:
             if k is None:
                 pk, bins = get_power(overdensity, self.box_size, **self.pspec_kwargs)
 
-            P_k[i] = pk
+            P_k.append(pk)
 
-        return P_k, bins
+        return np.asarray(P_k), bins
+
+    def find_z(self, xe):
+        return utils.indexof(self.xe, xe)
+
+    def find_xe(self, z):
+        return utils.indexof(self.z, z)
