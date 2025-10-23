@@ -569,7 +569,7 @@ class Cat:
         if self.xion is not None:
             if self.verbose:
                 print(f"Calculating ionisation history from boxes...")
-                return np.mean(self.xion, axis=(1, 2, 3))
+                return np.mean(self.xion, axis=(1, 2, 3)), self.z
 
         if self.xion is None:
             if self.verbose:
