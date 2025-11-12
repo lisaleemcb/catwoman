@@ -1,0 +1,20 @@
+name: catwoman
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - pandas
+  - setuptools
+  - pyarrow
+  - astropy
+  - numpy
+  - scipy
+  - matplotlib
+  - jupyter
+  - camb
+  - pysr
+  - pip
+  - pip:
+      - powerbox
+      - git+https://github.com/lisaleemcb/catwoman.git
