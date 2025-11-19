@@ -568,7 +568,7 @@ class Cat:
         if self.redshift_range == "all":
             if self.verbose:
                 print("Loading all available redshifts...")
-            return utils.redshift_keys
+            return redshifts
 
         else:
             redshifts = {
