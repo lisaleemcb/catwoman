@@ -565,8 +565,6 @@ class Cat:
             if key in self.file_nums
         }
 
-        print(f"redshifts: {redshifts}")
-
         if self.redshift_range == "all":
             if self.verbose:
                 print("Loading all available redshifts...")
