@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from astropy.cosmology import Planck18 as Planck
 
-base_dir = "/Users/emcbride/Datasets/LoReLi"
-df = pd.read_pickle(f"{base_dir}/metadata/LoReLi_database_loggedparams.pkl")
+# base_dir = "/Users/emcbride/Datasets/LoReLi"
+# df = pd.read_pickle(f"{base_dir}/metadata/LoReLi_database_loggedparams.pkl")
 
 
 def read_cube(path, type=np.float64):
