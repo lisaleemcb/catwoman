@@ -1,12 +1,11 @@
 import logging
-from logging import NullHandler
 import os
+from logging import NullHandler
+
 import numpy as np
 import pandas as pd
-
 import powerbox as pb
 from powerbox import get_power
-
 
 import catwoman.utils as utils
 from catwoman import __version__
@@ -69,19 +68,19 @@ class Cat:
     def __init__(
         self,
         sim_n,
-        pspec_kwargs=None,
-        skip_early=True,
-        load_params=False,
-        load_spectra=True,
         load_xion_cubes=False,
         load_density_cubes=False,
         load_T21cm_cubes=False,
+        load_params=False,
+        load_spectra=True,
+        redshift_range="all",
+        pspec_kwargs=None,
+        skip_early=True,
         reinitialise_spectra=False,
-        use_LoReLi_xe=False,
         save_spectra=False,
         just_Pee=True,
+        use_LoReLi_xe=False,
         LoReLi_format=False,
-        redshifts_fn="metadata/redshift_list.dat",
         ionhistories_fn="metadata/ion_histories_full.npz",
         base_dir="/Users/emcbride/Datasets/LoReLi",
         path_sim="Datasets/LoReLi",
@@ -94,13 +93,19 @@ class Cat:
         debug=False,
     ):
         self.sim_n = sim_n
-        self.base_dir = base_dir
-        self.path_sim = path_sim
-        self.redshifts_fn = redshifts_fn
-        self.path_spectra = path_spectra
+        self.load_xion_cubes = load_xion_cubes
+        self.load_density_cubes = load_density_cubes
+        self.load_T21cm_cubes = load_T21cm_cubes
+        self.redshift_range = redshift_range
+        self.skip_early = skip_early
+        self.reinitialise_spectra = reinitialise_spectra
+        self.load_spectra = load_spectra
         self.use_LoReLi_xe = use_LoReLi_xe
         self.ionhistories_fn = ionhistories_fn
-        self.skip_early = skip_early
+        self.base_dir = base_dir
+        self.path_sim = path_sim
+        self.path_spectra = path_spectra
+
         self.verbose = verbose
         self.debug = debug
 
@@ -109,6 +114,7 @@ class Cat:
             (2 * np.pi) / self.box_size,
             (2 * np.pi * 256) / self.box_size / 2,
         )
+        self.k = k
 
         self.density = None
         self.xion = None
@@ -119,7 +125,7 @@ class Cat:
             print(f"Loading sim number {sim_n}...")
             print(f"==============================")
 
-        if load_spectra and reinitialise_spectra:
+        if self.load_spectra and self.reinitialise_spectra:
             raise ValueError(
                 "Both load_spectra and reinitialise_spectra cannot be set to true."
             )
@@ -156,9 +162,6 @@ class Cat:
             f"{self.path_sim}/simu{self.sim_n}/postprocessing/cubes/dtb"
         )
 
-        if self.base_dir:
-            self.redshifts_fn = f"{self.base_dir}/{self.redshifts_fn}"
-
         if self.verbose:
             if load_params:
                 print("Fetching params from:")
@@ -166,16 +169,16 @@ class Cat:
                 print("")
 
         if (
-            load_xion_cubes
-            or load_density_cubes
-            or load_T21cm_cubes
-            or reinitialise_spectra
+            self.load_xion_cubes
+            or self.load_density_cubes
+            or self.load_T21cm_cubes
+            or self.reinitialise_spectra
         ):
             if self.verbose:
                 print("Fetching reference files...")
-            self.file_nums = self.gen_filenums()
-            self.redshift_keys = self.fetch_redshifts()
-            self.z = self.redshift_keys.values()
+
+            self.file_nums = self.get_filenums()
+            self.redshifts = self.fetch_redshifts()
 
         fn_params = f"runtime_parameters_simulation_{self.sim_n}_reformatted.txt"
         if load_params:
@@ -183,24 +186,36 @@ class Cat:
                 print("Fetching params...")
             self.params = utils.read_params(f"{self.path_params}/{fn_params}")
 
-        if load_xion_cubes or reinitialise_spectra:
-            self.xion, self.z = self.load_cubes(
+        if self.load_xion_cubes or self.reinitialise_spectra:
+            self.xion = self.load_cubes(
                 self.path_xion_cubes, "xion_256_out", type="xion"
             )
 
-        if load_density_cubes or reinitialise_spectra:
-            self.density, self.z = self.load_cubes(
+        if self.load_density_cubes or self.reinitialise_spectra:
+            self.density = self.load_cubes(
                 self.path_density_cubes, "dens_256_out", type="density"
             )
 
-        if load_T21cm_cubes:
-            self.T21cm, self.z = self.load_cubes(
+        if self.load_T21cm_cubes:
+            self.T21cm = self.load_cubes(
                 self.path_T21cm_cubes, "dtb_tp_hi_256_nocorrection_out", type="T21cm"
             )
 
         self.xe, self.z = self.get_ionhistory()
 
-        if reinitialise_spectra:
+        if self.skip_early:
+            self.skip = utils.find_index(
+                self.xe
+            )  # to pick out monotonically increasing xe only
+            if np.isnan(self.skip):
+                self.skip = 0
+        else:
+            self.skip = 0
+
+        self.z = self.z[self.skip :]
+        self.xe = self.xe[self.skip :]
+
+        if self.reinitialise_spectra:
             if self.verbose:
                 print("")
                 print(
@@ -272,17 +287,6 @@ class Cat:
                             Pk=self.Pxx,
                         )
 
-                if self.skip_early:
-                    self.skip = utils.find_index(
-                        self.xe
-                    )  # to pick out monotonically increasing xe only
-                    if np.isnan(self.skip):
-                        self.skip = 0
-                else:
-                    self.skip = 0
-
-                self.z = self.z[self.skip :]
-                self.xe = self.xe[self.skip :]
                 self.Pee = self.Pee[self.skip :]
                 if not just_Pee:
                     self.Pbb = self.Pbb[self.skip :]
@@ -298,7 +302,7 @@ class Cat:
                 print("No spectra here, only danger!!!")
                 print("")
 
-        if load_spectra:
+        if self.load_spectra:
             if LoReLi_format:
                 self.Pee_spectra_path = (
                     f"{self.path_spectra}/simu{self.sim_n}/postprocessing/cubes/ps_dtb"
@@ -360,12 +364,6 @@ class Cat:
 
                 self.k = Pee_file["k"]
                 self.xe = Pee_file["xe"]
-                if self.skip_early:
-                    self.skip = utils.find_index(
-                        self.xe
-                    )  # to pick out monotonically increasing xe only
-                else:
-                    self.skip = 0
 
                 self.z = Pee_file["z"][self.skip :]
                 self.xe = self.xe[self.skip :]
@@ -408,8 +406,6 @@ class Cat:
                     )
                     print("")
 
-                self.redshift_keys = self.fetch_redshifts()
-
                 if self.base_dir:
                     ionhistories_fn = f"{self.base_dir}/{ionhistories_fn}"
 
@@ -430,16 +426,16 @@ class Cat:
                 z_indices = []
                 #   print(f'redshift are: \n \t{self.z}')
                 self.which_keys = []
-                for key in self.redshift_keys.keys():
+                for key in utils.redshift_keys.keys():
                     fn = f"{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat"
                     # print(fn)
                     if os.path.isfile(fn):
-                        keyz_rounded = utils.round_sig_figs(self.redshift_keys[key])
+                        keyz_rounded = utils.round_sig_figs(utils.redshift_keys[key])
                         match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
 
                         if self.debug:
                             print(
-                                f"key: {key}, redshift: {self.redshift_keys[key]}, zrounded: {keyz_rounded}"
+                                f"key: {key}, redshift: {utils.redshift_keys[key]}, zrounded: {keyz_rounded}"
                             )
                             print(f"match: {match}")
 
@@ -450,7 +446,7 @@ class Cat:
                                 print(f"keyz: {keyz_rounded}, z_xe: {self.z[index]}")
                                 print()
                             z_indices.append(index)
-                            #      print(f'Log has redshift {self.redshift_keys[key]}')
+                            #      print(f'Log has redshift {self.redshifts[key]}')
                             s = np.genfromtxt(fn)
                             if len(s.shape) == 2:
                                 spectra.append(s)
@@ -501,7 +497,7 @@ class Cat:
             print(f"Simulation {self.sim_n} loaded and ready for science!!")
             print("")
 
-    def gen_filenums(self):
+    def get_filenums(self):
         """
         Pull lists of filenumbers
 
@@ -519,12 +515,28 @@ class Cat:
 
         """
         file_nums = []
-        for filename in os.listdir(f"{self.path_xion_cubes}"):
-            basename, extension = os.path.splitext(filename)
 
-            file_nums.append(basename.split("out")[1])
+        for type in ["xion", "density", "T21cm"]:
+            load = getattr(self, f"load_{type}_cubes")
+            if load:
+                if self.debug:
+                    print(f"Now checking on {type}...")
+                nums = []
+                path = getattr(self, f"path_{type}_cubes")
+                for filename in os.listdir(path):
+                    basename, extension = os.path.splitext(filename)
+                    nums.append(basename.split("out")[1])
 
-        return np.sort(file_nums)
+                nums = list(set(nums))
+
+                if self.debug:
+                    print(nums)
+
+                file_nums.append(nums)
+
+        common = set.intersection(*(set(lst) for lst in file_nums))
+
+        return np.sort(list(common))
 
     def fetch_params(self):
         """ """
@@ -545,17 +557,34 @@ class Cat:
 
     def fetch_redshifts(self):
         """ """
-        if self.verbose:
-            print("Fetching redshifts from:")
-            print(f"\t {self.redshifts_fn}")
+        redshifts = {
+            key: value
+            for key, value in utils.redshift_keys.items()
+            if key in self.file_nums
+        }
 
-        redshift_keys = {}
-        with open(self.redshifts_fn) as f:
-            for line in f:
-                (val, key) = line.split()
-                redshift_keys[key] = float(val)
+        if self.redshift_range == "all":
+            if self.verbose:
+                print("Loading all available redshifts...")
+            return redshifts
 
-        return redshift_keys
+        else:
+            redshifts = {
+                key: value
+                for key, value in redshifts.items()
+                if min(self.redshift_range) <= value <= max(self.redshift_range)
+            }
+            if not redshifts:
+                raise ValueError(
+                    f"No available cubes found within the redshift range {max(self.redshift_range)} to {min(self.redshift_range)}."
+                )
+            else:
+                if self.verbose:
+                    print(
+                        f"Found {len(redshifts)} available cubes found within the redshift range {max(self.redshift_range)} to {min(self.redshift_range)}."
+                    )
+
+                return redshifts
 
     def load_cubes(self, fn, ext, type="simulation", nbins=512):
         """
@@ -565,60 +594,62 @@ class Cat:
         :param nbins:  (Default value = 512)
 
         """
+        cubes_list = []
+        path = getattr(self, f"path_{type}_cubes")
+
         if self.verbose:
             print(f"Fetching {type} cubes from:")
-            print(f"\t path: {self.path_xion_cubes}")
+            print(f"\t path: {path}")
             print("")
 
-        cubes_list = []
         for n in self.file_nums:
-            # if self.verbose:
-            #    print(f'Now on file {n}')
-
-            # if self.verbose:
-            #     print(f'Now reading in density box from from {filename}')
-            #
-            filename = f"{fn}/{ext}{n}.dat"
-
-            if not os.path.isfile(filename):
-                raise FileNotFoundError(filename)
-            if os.path.isfile(filename):
+            if n in self.redshifts.keys():
+                filename = f"{fn}/{ext}{n}.dat"
+                if self.debug:
+                    print(f"Now on file {n}")
                 cube = utils.read_cube(filename)
-                z = 0
-                if n in self.redshift_keys.keys():
-                    z = self.redshift_keys[n]
-                    if type == "density":
-                        cube = utils.convert_density(cube, z)
+                if type == "density":
+                    cube = utils.convert_density(cube, self.redshifts[n])
 
-                    dict = {"file_n": n, "z": float(z), "cube": cube}
-                    cubes_list.append(dict)
+                cubes_list.append(cube)
 
-        z = np.zeros(len(cubes_list))
-        cubes = np.zeros((len(cubes_list), *cubes_list[0]["cube"].shape))
-        for i, c in enumerate(cubes_list):
-            z[i] = c["z"]
-            cubes[i] = c["cube"]
+        return np.asarray(cubes_list)
 
-        return cubes, z
-
-    def get_ionhistory(self, interpolate=False, z_interp=None):
+    def get_ionhistory(self, interpolate=False, z_interp=None, use_cube=False):
         """ """
-        if self.xion is not None:
+        if use_cube:
+            if self.xion is None:
+                raise ValueError(
+                    "Ionisation cubes aren't loaded. Set use_cube=False or load_xion=True"
+                )
+
             if self.verbose:
                 print(f"Calculating ionisation history from boxes...")
-                return np.mean(self.xion, axis=(1, 2, 3)), self.z
 
-        if self.xion is None:
-            if self.verbose:
-                print(f"No ion box available, loading ionisation history from file...")
+            return np.mean(self.xion, axis=(1, 2, 3)), self.z
 
-            fn = f"{self.base_dir}/{self.ionhistories_fn}"
-            ion_histories = np.load(fn, allow_pickle=True)
-            ion_histories = ion_histories["arr_0"].item()
+        fn = f"{self.base_dir}/{self.ionhistories_fn}"
+        ion_histories = np.load(fn, allow_pickle=True)
+        ion_histories = ion_histories["arr_0"].item()
 
-            z = ion_histories[self.sim_n]["z"]
-            xe = ion_histories[self.sim_n]["xe"]
+        z = ion_histories[self.sim_n]["z"]
+        xe = ion_histories[self.sim_n]["xe"]
 
+        if any(
+            x
+            for x in [
+                self.load_density_cubes,
+                self.load_xion_cubes,
+                self.load_T21cm_cubes,
+            ]
+        ):
+            xe = np.interp(
+                np.asarray(list(self.redshifts.values()))[::-1], z[::-1], xe[::-1]
+            )[::-1]
+
+            return xe, np.asarray(list(self.redshifts.values()))
+
+        else:
             return np.asarray(xe), np.asarray(z)
 
     def calculate_power(self, cubes, log_bins=True, type="the"):
