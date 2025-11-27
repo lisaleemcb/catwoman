@@ -406,8 +406,6 @@ class Cat:
                     )
                     print("")
 
-                self.redshifts = self.fetch_redshifts()
-
                 if self.base_dir:
                     ionhistories_fn = f"{self.base_dir}/{ionhistories_fn}"
 
@@ -428,16 +426,16 @@ class Cat:
                 z_indices = []
                 #   print(f'redshift are: \n \t{self.z}')
                 self.which_keys = []
-                for key in self.redshifts.keys():
+                for key in utils.redshift_keys.keys():
                     fn = f"{self.Pee_spectra_path}/powerspectrum_electrons{key}_logbins.dat"
                     # print(fn)
                     if os.path.isfile(fn):
-                        keyz_rounded = utils.round_sig_figs(self.redshifts[key])
+                        keyz_rounded = utils.round_sig_figs(utils.redshift_keys[key])
                         match = np.where(np.isclose(self.z, keyz_rounded, rtol=1e-3))[0]
 
                         if self.debug:
                             print(
-                                f"key: {key}, redshift: {self.redshifts[key]}, zrounded: {keyz_rounded}"
+                                f"key: {key}, redshift: {utils.redshift_keys[key]}, zrounded: {keyz_rounded}"
                             )
                             print(f"match: {match}")
 
