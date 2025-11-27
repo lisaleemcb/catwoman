@@ -55,7 +55,7 @@ for sn in sims_num:
     print("-----------------------------------------------------------")
     print(f"Now on sim {sn}...")
 
-    save_fn = f"{path_slices}/sim{sn}_densityslices_z7p5.npz"
+    save_fn = f"{path_slices}/sim{sn}_densityslices_z7p5"
     if os.path.exists(save_fn):
         print("File already exists")
         continue
