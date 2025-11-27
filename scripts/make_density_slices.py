@@ -80,6 +80,10 @@ for sn in sims_num:
     print(f"Sim {sn} saved to disk...")
     print("")
 
+    handlers = logger.handlers[:]
+    for h in handlers:
+        h.close()
+        logger.removeHandler(h)
 
 print("")
 print(f"We actually ran through all the files!")
