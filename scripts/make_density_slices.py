@@ -27,7 +27,7 @@ args = parser.parse_args()
 
 home_dir = "/obs/emcbride"
 path_slices = f"{home_dir}/density_slices"
-path_sim = "/loreli/rmeriot/simus_loreli/"  #'/obs/emcbride/sims'  # head folder holding all the simulation cubes
+path_sim = "/loreli/rmeriot/simus_loreli"  #'/obs/emcbride/sims'  # head folder holding all the simulation cubes
 
 # # load simulations that are already parsed so we can skip
 # skipped = np.load(f'{home_dir}/skipped.npy')
