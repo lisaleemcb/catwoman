@@ -1,9 +1,14 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 home_dir = "/home/emc-brid"
 base_dir = "/data/cluster/emc-brid/Datasets/LoReLi"
+
+df = pd.read_pickle(f"{base_dir}/metadata/LoReLi_database_loggedparams.pkl")
+xe_histories = np.load(f"{base_dir}/metadata/ion_histories_full.npz", allow_pickle=True)
+xe_histories = xe_histories["arr_0"].item()
 
 box_size = 296.0  # Mpc
 k_res = ((2 * np.pi) / box_size, (2 * np.pi * 256) / box_size / 2)
