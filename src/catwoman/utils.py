@@ -112,15 +112,9 @@ def round_sig_figs(x, sig_figs=5):
 
 
 def indexof(arr, target):
-    i = np.searchsorted(arr, target)
-    if i == 0:
-        idx = 0
-    elif i == len(arr):
-        idx = len(arr) - 1
-    else:
-        # pick the closer of arr[i-1] or arr[i]
-        idx = i if abs(arr[i] - target) < abs(arr[i - 1] - target) else i - 1
-    return idx
+    index = np.argmin(np.abs(arr - target))
+
+    return index
 
 
 def setup_logger(logger_name, log_file, level=logging.INFO):

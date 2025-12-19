@@ -690,10 +690,10 @@ class Cat:
 
         return np.asarray(P_k), bins
 
-    def what_z(self, xe):
+    def get_z(self, xe):
         return self.z[utils.indexof(self.xe, xe)]
 
-    def what_xe(self, z):
+    def get_xe(self, z):
         return self.xe[utils.indexof(self.z, z)]
 
     def get_index_xe(self, xe):
