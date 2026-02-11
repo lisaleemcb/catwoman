@@ -118,20 +118,16 @@ def indexof(arr, target):
 
 
 def setup_logger(logger_name, log_file, level=logging.INFO):
-    handler = logging.FileHandler(log_file)
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-    handler.setFormatter(formatter)
-
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
-    logger.addHandler(handler)
 
-    # Clear existing handlers to avoid duplicate logs
-    if logger.hasHandlers():
-        logger.handlers.clear()
+    if not logger.handlers:
+        handler = logging.FileHandler(log_file)
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
-    logger.addHandler(handler)
-
+    logger.propagate = False
     return logger
 
 
