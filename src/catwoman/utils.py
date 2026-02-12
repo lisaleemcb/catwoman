@@ -18,6 +18,9 @@ def read_cube(path, type=np.float64):
     shape = np.shape(cube)[0]
     length = int(shape ** (1 / 3)) + 1
 
+    if cube.size != length**3.0:
+        return 0
+
     cube = np.reshape(cube, (length, length, length)).T
     shape = np.shape(cube)
 

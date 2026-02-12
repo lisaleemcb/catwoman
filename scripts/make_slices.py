@@ -103,6 +103,11 @@ for sn in sims_num:
         filename = f"{path_sim}/simu{sn}/postprocessing/cubes/dtb/dtb_tp_hi_256_nocorrection_out{filenum}.dat"
 
     cube = utils.read_cube(filename)
+
+    if cube == 0:
+        logger.info(f"Sim {sn} file has a problem...")
+        continue
+
     cube = utils.convert_density(cube, utils.redshift_keys[filenum])
 
     slices = np.stack([cube[0, :, :], cube[:, 0, :], cube[:, :, 0]])
