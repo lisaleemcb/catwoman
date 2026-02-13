@@ -104,7 +104,7 @@ for sn in sims_num:
 
     cube = utils.read_cube(filename)
 
-    if cube == 0:
+    if np.isscalar(cube):
         logger.info(f"Sim {sn} file has a problem...")
         continue
 
